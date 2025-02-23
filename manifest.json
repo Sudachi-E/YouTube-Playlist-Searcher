@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Playlist Searcher",
+  "version": "1.0",
+  "description": "Adds search functionality to YouTube playlists",
+  "permissions": ["activeTab"],
+  "host_permissions": ["*://*.youtube.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+} 
