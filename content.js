@@ -302,84 +302,28 @@ function videoMatchesSearch(video, searchTerm) {
            (searchChannel && channelName.includes(searchTerm));
 }
 
-// Function to auto scroll and search
-async function autoScrollAndSearch() {
-    const searchTerm = document.querySelector('#playlist-search-input').value.toLowerCase();
-    if (searchTerm.trim() === '') return;
-
-    // Get total playlist count from sidebar
-    const totalVideos = getPlaylistTotalCount();
-    
-    // Get initial video count and matches
-    let currentVideos = document.querySelectorAll('ytd-playlist-video-renderer');
-    let matchCount = Array.from(currentVideos).filter(video => videoMatchesSearch(video, searchTerm)).length;
-    let lastVideoCount = currentVideos.length;
-    let noNewVideosCount = 0;
-    
-    // Show loading message
-    const resultsCount = document.querySelector('#search-results-count');
-    if (resultsCount) {
-        resultsCount.textContent = 'Loading more videos...';
-    }
-    
-    // Auto scroll until we find all matches or reach the end
-    while (noNewVideosCount < 3) {
-        // If we have the total count and found all possible matches, stop scrolling
-        if (totalVideos !== null && matchCount >= totalVideos) {
-            break;
-        }
-        
-        // Scroll to bottom
-        window.scrollTo(0, document.documentElement.scrollHeight);
-        
-        // Wait for new content to load
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Check if new videos were loaded
-        currentVideos = document.querySelectorAll('ytd-playlist-video-renderer');
-        const currentVideoCount = currentVideos.length;
-        
-        if (currentVideoCount > lastVideoCount) {
-            // Count matches in new videos
-            matchCount = Array.from(currentVideos).filter(video => videoMatchesSearch(video, searchTerm)).length;
-            lastVideoCount = currentVideoCount;
-            noNewVideosCount = 0;
-            
-            // Update channel filter with any new channels
-            updateChannelFilter();
-        } else {
-            noNewVideosCount++;
-        }
-    }
-    
-    // Scroll back to top
-    window.scrollTo(0, 0);
-    
-    // Perform the final search
-    handleSearch();
-}
-
 // Function to handle the search
 function handleSearch() {
-    const searchTerm = document.querySelector('#playlist-search-input').value.toLowerCase();
+    const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
     const videoItems = document.querySelectorAll('ytd-playlist-video-renderer');
     const playFilteredButton = document.querySelector('#play-filtered-button');
-    const selectedChannel = document.querySelector('#channel-filter').value;
-    const selectedYear = document.querySelector('#year-filter').value;
-    const selectedViews = document.querySelector('#views-filter').value;
-    const selectedDuration = document.querySelector('#duration-filter').value;
+    const selectedChannel = document.querySelector('#channel-filter')?.value || '';
+    const selectedYear = document.querySelector('#year-filter')?.value || '';
+    const selectedViews = document.querySelector('#views-filter')?.value || '';
+    const selectedDuration = document.querySelector('#duration-filter')?.value || '';
     let matchCount = 0;
 
-    // First hide all videos
+    // Check each video
     videoItems.forEach(item => {
-        item.style.display = 'none';
-    });
-
-    // Show matching videos
-    videoItems.forEach(item => {
-        if (videoMatchesSearch(item, searchTerm)) {
-            item.style.display = '';
-            matchCount++;
+        try {
+            if (videoMatchesSearch(item, searchTerm)) {
+                item.style.removeProperty('display');
+                matchCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error processing video:', error);
         }
     });
 
@@ -420,8 +364,8 @@ function handleSearch() {
                 message += ` matching "${searchTerm}"`;
             }
         } else if (searchTerm.trim()) {
-            const searchTitle = document.querySelector('#search-title').checked;
-            const searchChannel = document.querySelector('#search-channel').checked;
+            const searchTitle = document.querySelector('#search-title')?.checked;
+            const searchChannel = document.querySelector('#search-channel')?.checked;
             let searchScope = '';
             if (searchTitle && searchChannel) searchScope = 'titles and channel names';
             else if (searchTitle) searchScope = 'titles';
@@ -478,8 +422,49 @@ function init() {
     // Create new interface
     createSearchInterface();
     
-    // Add scroll listener
-    addScrollListener();
+    // Add mutation observer for new videos
+    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
+    if (videosContainer) {
+        const observer = new MutationObserver((mutations) => {
+            let needsUpdate = false;
+            
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(node => {
+                        // Check if the added node is a video
+                        if (node.tagName === 'YTD-PLAYLIST-VIDEO-RENDERER') {
+                            try {
+                                // Check if it matches current search/filters
+                                const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
+                                if (!videoMatchesSearch(node, searchTerm)) {
+                                    node.style.display = 'none';
+                                }
+                                needsUpdate = true;
+                            } catch (error) {
+                                console.error('Error processing new video:', error);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Update filters and counts if needed
+            if (needsUpdate) {
+                try {
+                    updateChannelFilter();
+                    updateYearFilter();
+                    handleSearch(); // Update counts and filtered URL
+                } catch (error) {
+                    console.error('Error updating filters:', error);
+                }
+            }
+        });
+
+        observer.observe(videosContainer, {
+            childList: true,
+            subtree: true
+        });
+    }
 }
 
 // Initialize when page loads
@@ -521,15 +506,15 @@ function createSearchInterface() {
         return;
     }
 
-    // Wait for the playlist header to be fully loaded
-    const checkForPlaylistHeader = setInterval(() => {
-        // Try to find the playlist title area
-        const playlistHeader = document.querySelector('ytd-playlist-header-renderer');
-        const buttons = document.querySelector('ytd-playlist-header-renderer #top-level-buttons-computed');
+    // Wait for the playlist content to be loaded
+    const checkForPlaylistContent = setInterval(() => {
+        // Try to find the playlist content area and the videos container
+        const playlistContent = document.querySelector('ytd-playlist-video-list-renderer');
+        const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
         
         // Only proceed if we have both elements and no existing search container
-        if (playlistHeader && buttons && !document.querySelector('#playlist-search-container')) {
-            clearInterval(checkForPlaylistHeader);
+        if (playlistContent && videosContainer && !document.querySelector('#playlist-search-container')) {
+            clearInterval(checkForPlaylistContent);
             
             // Remove any existing wrapper
             const existingWrapper = document.querySelector('#playlist-search-wrapper');
@@ -542,23 +527,20 @@ function createSearchInterface() {
             wrapper.id = 'playlist-search-wrapper';
             wrapper.appendChild(searchContainer);
             
-            // Insert after the buttons
-            const parent = buttons.parentNode;
-            if (parent) {
-                parent.insertBefore(wrapper, buttons.nextSibling);
-                addSearchEventListeners();
-                
-                // Update filters after a short delay to ensure videos are loaded
-                setTimeout(() => {
-                    updateChannelFilter();
-                    updateYearFilter();
-                }, 1000);
-            }
+            // Insert before the videos container
+            playlistContent.insertBefore(wrapper, videosContainer);
+            addSearchEventListeners();
+            
+            // Update filters after a short delay to ensure videos are loaded
+            setTimeout(() => {
+                updateChannelFilter();
+                updateYearFilter();
+            }, 1000);
         }
     }, 500); // Check every 500ms
 
     // Clear interval after 10 seconds to prevent infinite checking
-    setTimeout(() => clearInterval(checkForPlaylistHeader), 10000);
+    setTimeout(() => clearInterval(checkForPlaylistContent), 10000);
 }
 
 // Function to add event listeners to search interface
@@ -571,47 +553,49 @@ function addSearchEventListeners() {
     const yearFilter = document.querySelector('#year-filter');
     const viewsFilter = document.querySelector('#views-filter');
     const durationFilter = document.querySelector('#duration-filter');
+    const searchTitle = document.querySelector('#search-title');
+    const searchChannel = document.querySelector('#search-channel');
     
-    if (searchInput && searchButton && playFilteredButton) {
-        // Change input event to trigger auto-scroll search
-        searchInput.addEventListener('input', () => {
-            if (searchInput.value.trim() !== '') {
-                autoScrollAndSearch();
-            } else {
-                handleSearch();
-            }
-        });
-        
-        searchButton.addEventListener('click', autoScrollAndSearch);
+    if (searchInput) {
+        // Add input event with debounce
+        const debouncedSearch = debounce(handleSearch, 300);
+        searchInput.addEventListener('input', debouncedSearch);
+    }
+
+    if (searchButton) {
+        searchButton.addEventListener('click', handleSearch);
+    }
+
+    if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') autoScrollAndSearch();
+            if (e.key === 'Enter') handleSearch();
         });
+    }
 
-        // Add clear button click handler
-        if (clearButton) {
-            clearButton.addEventListener('click', clearSearch);
-        }
+    if (clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+    }
 
-        // Add play filtered button click handler
+    if (playFilteredButton) {
         playFilteredButton.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default only on left click
+            e.preventDefault();
             window.location.href = playFilteredButton.href;
         });
-
-        // Add filter change handlers
-        if (channelFilter) {
-            channelFilter.addEventListener('change', handleSearch);
-        }
-        if (yearFilter) {
-            yearFilter.addEventListener('change', handleSearch);
-        }
-        if (viewsFilter) {
-            viewsFilter.addEventListener('change', handleSearch);
-        }
-        if (durationFilter) {
-            durationFilter.addEventListener('change', handleSearch);
-        }
     }
+
+    // Add filter change handlers
+    [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
+        if (filter) {
+            filter.addEventListener('change', handleSearch);
+        }
+    });
+
+    // Add checkbox change handlers
+    [searchTitle, searchChannel].forEach(checkbox => {
+        if (checkbox) {
+            checkbox.addEventListener('change', handleSearch);
+        }
+    });
 }
 
 // Function to clear all search filters

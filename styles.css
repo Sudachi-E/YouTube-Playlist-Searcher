@@ -1,5 +1,5 @@
 #playlist-search-wrapper {
-    padding: 16px 0;
+    padding: 0 0 16px 0;
     width: 100%;
     box-sizing: border-box;
     display: block;
@@ -10,13 +10,15 @@
     padding: 12px;
     background: var(--yt-spec-brand-background-primary, white);
     width: 100%;
-    max-width: 600px;
+    max-width: none;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     border: 1px solid var(--yt-spec-text-secondary);
     border-radius: 8px;
     box-sizing: border-box;
+    margin: 0 24px;
+    width: calc(100% - 48px);
 }
 
 .search-box {
