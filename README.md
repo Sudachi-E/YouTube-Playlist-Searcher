@@ -14,21 +14,25 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 
 ### Search Functionality
 - Real-time search filtering
-- Search in video titles and/or channel names
-- Case-insensitive matching
+- Search in video titles and/or channel names (toggleable via checkboxes)
+- Case-insensitive matching for both search terms and channel filtering
 - Auto-scrolling to load more videos during search
-- Results count display
+- Results count display with detailed filter information
+- Clear button to reset all filters instantly
 
 ### Advanced Filtering
 1. **Channel Filter**
    - Filter videos by specific channels
+   - Case-insensitive matching (e.g., "Channel Name" matches "channel name")
    - Automatically populated with channels in the playlist
-   - Updates as new videos are loaded
+   - Updates dynamically as new videos are loaded
+   - Dropdown menu for easy selection
 
 2. **Year Filter**
    - Filter videos by upload year
    - Supports both direct years and "X years ago" format
    - Automatically populated with available years
+   - Sorted newest to oldest
 
 3. **Views Filter**
    - Filter by view count ranges:
@@ -51,30 +55,48 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
      - 30-60 minutes
      - Over 1 hour
 
-### Additional Features
-- **Play Filtered**: Play only the filtered/matching videos
-- **Clear Button**: Reset all filters with one click
-- **Right-Click Support**: Open filtered playlist in new tab
-- **Responsive Design**: Works with YouTube's light and dark themes
-- **Auto-Updates**: Filters update automatically when new videos load
-- **Detailed Results**: Shows comprehensive filter information in results message
+### Playback Features
+- **Play Filtered**: Create and play a temporary playlist of only the filtered/matching videos
+- **Right-Click Support**: Open filtered playlist in new tab via right-click or middle-click
+- **Dynamic Updates**: Playlist URL updates automatically as search results change
+
+### User Interface
+- Clean, modern design that matches YouTube's aesthetic
+- Responsive layout that adapts to different screen sizes
+- Works seamlessly with both light and dark themes
+- Real-time updates as you type
+- Detailed results message showing active filters and match count
+- Checkbox controls for search scope (titles/channels)
+
+### Technical Features
+- Automatic initialization on playlist pages
+- Dynamic video loading detection
+- Efficient search with debounced updates
+- Preserves YouTube's native functionality
+- Handles single-page-application navigation
+- Automatic cleanup and reinitialize on page changes
 
 ## Usage
 
-1. Go to any YouTube playlist page
-2. The search interface will appear below the playlist header
-3. Use the search box to find videos by title or channel name
-4. Use the dropdown filters to narrow down results by:
-   - Channel name
-   - Upload year
-   - View count
-   - Video duration
-5. Click "Play Filtered" to play only the matching videos
-6. Use "Clear" to reset all filters
+1. Navigate to any YouTube playlist page
+2. The search interface will appear automatically below the playlist header
+3. Use any combination of:
+   - Search box to find videos by title or channel name
+   - Channel dropdown to filter by specific channels
+   - Year dropdown to filter by upload year
+   - Views dropdown to filter by view count
+   - Duration dropdown to filter by video length
+4. Toggle search scope using the checkboxes for titles and channel names
+5. Use the "Play Filtered" button to play matching videos:
+   - Left-click to play immediately
+   - Right-click to open context menu
+   - Middle-click to open in new tab
+6. Click "Clear" to reset all filters and show all videos
 
 ## Notes
 
 - The extension automatically handles YouTube's dynamic loading of videos
-- All filters can be used individually or combined
+- All filters can be used individually or combined for precise results
 - The extension preserves YouTube's native styling and theme
+- Search and filtering operations are case-insensitive for better usability
 - You'll need to create icon files (icon48.png and icon128.png) for the extension or modify the manifest.json to remove the icons section 

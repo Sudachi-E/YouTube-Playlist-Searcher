@@ -6,6 +6,11 @@
     clear: both;
 }
 
+/* Hide unavailable videos alert */
+ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
+    display: none !important;
+}
+
 #playlist-search-container {
     padding: 12px;
     background: var(--yt-spec-brand-background-primary, white);
@@ -86,11 +91,6 @@
     user-select: none;
 }
 
-#playlist-search-button {
-    background: var(--yt-spec-brand-button-background);
-    color: var(--yt-spec-static-brand-white);
-}
-
 #clear-search-button {
     background: var(--yt-spec-badge-chip-background);
     color: var(--yt-spec-text-primary);
@@ -99,10 +99,6 @@
 #play-filtered-button {
     background: var(--yt-spec-static-brand-red, #ff0000);
     color: var(--yt-spec-static-brand-white);
-}
-
-#playlist-search-button:hover {
-    background: var(--yt-spec-brand-button-background-hover);
 }
 
 #clear-search-button:hover {

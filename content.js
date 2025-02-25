@@ -37,7 +37,6 @@ function createSearchElement() {
                 <option value="1800-3600">30-60 minutes</option>
                 <option value="3600-up">Over 1 hour</option>
             </select>
-            <button id="playlist-search-button">Search</button>
             <button id="clear-search-button">Clear</button>
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
         </div>
@@ -223,15 +222,16 @@ function formatDuration(seconds) {
 
 // Function to check if video matches search
 function videoMatchesSearch(video, searchTerm) {
-    const title = video.querySelector('#video-title').textContent.toLowerCase();
-    const channelName = video.querySelector('#channel-name a').textContent.toLowerCase().trim();
-    const selectedChannel = document.querySelector('#channel-filter').value;
-    const selectedYear = document.querySelector('#year-filter').value;
-    const selectedViews = document.querySelector('#views-filter').value;
-    const selectedDuration = document.querySelector('#duration-filter').value;
+    const title = video.querySelector('#video-title')?.textContent.toLowerCase() || '';
+    const channelElement = video.querySelector('#channel-name a');
+    const channelName = channelElement?.textContent.trim() || '';
+    const selectedChannel = document.querySelector('#channel-filter')?.value || '';
+    const selectedYear = document.querySelector('#year-filter')?.value || '';
+    const selectedViews = document.querySelector('#views-filter')?.value || '';
+    const selectedDuration = document.querySelector('#duration-filter')?.value || '';
     
-    // Check channel filter first
-    if (selectedChannel && channelName !== selectedChannel.toLowerCase()) {
+    // Check channel filter first - case-insensitive match
+    if (selectedChannel && channelName.toLowerCase() !== selectedChannel.toLowerCase()) {
         return false;
     }
     
@@ -290,16 +290,16 @@ function videoMatchesSearch(video, searchTerm) {
         return true;
     }
 
-    const searchTitle = document.querySelector('#search-title').checked;
-    const searchChannel = document.querySelector('#search-channel').checked;
+    const searchTitle = document.querySelector('#search-title')?.checked;
+    const searchChannel = document.querySelector('#search-channel')?.checked;
     
     // If neither checkbox is checked, treat as both checked
     if (!searchTitle && !searchChannel) {
-        return title.includes(searchTerm) || channelName.includes(searchTerm);
+        return title.includes(searchTerm) || channelName.toLowerCase().includes(searchTerm);
     }
     
     return (searchTitle && title.includes(searchTerm)) || 
-           (searchChannel && channelName.includes(searchTerm));
+           (searchChannel && channelName.toLowerCase().includes(searchTerm));
 }
 
 // Function to handle the search
@@ -393,20 +393,62 @@ function debounce(func, wait) {
     };
 }
 
+// Function to add event listeners to search interface
+function addSearchEventListeners() {
+    const searchInput = document.querySelector('#playlist-search-input');
+    const clearButton = document.querySelector('#clear-search-button');
+    const playFilteredButton = document.querySelector('#play-filtered-button');
+    const channelFilter = document.querySelector('#channel-filter');
+    const yearFilter = document.querySelector('#year-filter');
+    const viewsFilter = document.querySelector('#views-filter');
+    const durationFilter = document.querySelector('#duration-filter');
+    const searchTitle = document.querySelector('#search-title');
+    const searchChannel = document.querySelector('#search-channel');
+    
+    if (searchInput) {
+        // Add debounced search
+        const debouncedSearch = debounce(handleSearch, 300);
+        searchInput.addEventListener('input', debouncedSearch);
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+    }
+
+    if (playFilteredButton) {
+        playFilteredButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = playFilteredButton.href;
+        });
+    }
+
+    // Add filter change handlers
+    [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
+        if (filter) {
+            filter.addEventListener('change', handleSearch);
+        }
+    });
+
+    // Add checkbox change handlers
+    [searchTitle, searchChannel].forEach(checkbox => {
+        if (checkbox) {
+            checkbox.addEventListener('change', handleSearch);
+        }
+    });
+}
+
 // Function to add scroll event listener
 function addScrollListener() {
-    // Debounce the search and channel filter update to prevent too many updates while scrolling
-    const debouncedUpdate = debounce(() => {
-        updateChannelFilter();
-        updateYearFilter();
-        handleSearch();
-    }, 250);
-    
-    // Add scroll event listener to the window
+    // Update filters when scrolling stops
+    let scrollTimeout;
     window.addEventListener('scroll', () => {
-        // Only update if we're on a playlist page
         if (isPlaylistPage()) {
-            debouncedUpdate();
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                updateChannelFilter();
+                updateYearFilter();
+                handleSearch();
+            }, 250);
         }
     });
 }
@@ -431,32 +473,17 @@ function init() {
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                     mutation.addedNodes.forEach(node => {
-                        // Check if the added node is a video
                         if (node.tagName === 'YTD-PLAYLIST-VIDEO-RENDERER') {
-                            try {
-                                // Check if it matches current search/filters
-                                const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
-                                if (!videoMatchesSearch(node, searchTerm)) {
-                                    node.style.display = 'none';
-                                }
-                                needsUpdate = true;
-                            } catch (error) {
-                                console.error('Error processing new video:', error);
-                            }
+                            needsUpdate = true;
                         }
                     });
                 }
             });
 
-            // Update filters and counts if needed
             if (needsUpdate) {
-                try {
-                    updateChannelFilter();
-                    updateYearFilter();
-                    handleSearch(); // Update counts and filtered URL
-                } catch (error) {
-                    console.error('Error updating filters:', error);
-                }
+                updateChannelFilter();
+                updateYearFilter();
+                handleSearch();
             }
         });
 
@@ -467,25 +494,65 @@ function init() {
     }
 }
 
+// Function to check if the search interface needs to be initialized
+function checkAndInitialize() {
+    // If we're not on a playlist page, don't do anything
+    if (!isPlaylistPage()) return;
+
+    // Check if the search interface exists and is properly placed
+    const searchContainer = document.querySelector('#playlist-search-container');
+    const playlistContent = document.querySelector('ytd-playlist-video-list-renderer');
+    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
+
+    // If we're missing any required elements, try to initialize
+    if (!searchContainer || !playlistContent || !videosContainer) {
+        init();
+        return;
+    }
+
+    // Check if the search container is in the correct location
+    const isCorrectlyPlaced = searchContainer.parentElement?.id === 'playlist-search-wrapper' &&
+                             searchContainer.parentElement?.parentElement === playlistContent &&
+                             searchContainer.parentElement?.nextElementSibling === videosContainer;
+
+    // If not correctly placed, reinitialize
+    if (!isCorrectlyPlaced) {
+        init();
+    }
+}
+
 // Initialize when page loads
-init();
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial check
+    checkAndInitialize();
+
+    // Set up a mutation observer for the entire document to catch YouTube's SPA navigation
+    const documentObserver = new MutationObserver((mutations) => {
+        // Check if we need to initialize after any DOM changes
+        checkAndInitialize();
+    });
+
+    // Observe the document for any changes that might indicate navigation
+    documentObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
+
+// Also try to initialize immediately in case DOMContentLoaded has already fired
+checkAndInitialize();
+
+// Handle YouTube's navigation events
+window.addEventListener('yt-navigate-start', checkAndInitialize);
+window.addEventListener('yt-navigate-finish', checkAndInitialize);
 
 // Re-initialize when navigation occurs (for single-page-application behavior)
 let lastUrl = location.href;
 new MutationObserver(() => {
     const url = location.href;
     if (url !== lastUrl) {
-        const wasPlaylist = lastUrl.includes('/playlist?list=');
-        const isPlaylist = url.includes('/playlist?list=');
         lastUrl = url;
-
-        if (wasPlaylist && !isPlaylist) {
-            // If we're navigating away from a playlist, refresh the page
-            window.location.reload();
-        } else {
-            // Otherwise just reinitialize
-            init();
-        }
+        checkAndInitialize();
     }
 }).observe(document, { subtree: true, childList: true });
 
@@ -541,61 +608,6 @@ function createSearchInterface() {
 
     // Clear interval after 10 seconds to prevent infinite checking
     setTimeout(() => clearInterval(checkForPlaylistContent), 10000);
-}
-
-// Function to add event listeners to search interface
-function addSearchEventListeners() {
-    const searchInput = document.querySelector('#playlist-search-input');
-    const searchButton = document.querySelector('#playlist-search-button');
-    const clearButton = document.querySelector('#clear-search-button');
-    const playFilteredButton = document.querySelector('#play-filtered-button');
-    const channelFilter = document.querySelector('#channel-filter');
-    const yearFilter = document.querySelector('#year-filter');
-    const viewsFilter = document.querySelector('#views-filter');
-    const durationFilter = document.querySelector('#duration-filter');
-    const searchTitle = document.querySelector('#search-title');
-    const searchChannel = document.querySelector('#search-channel');
-    
-    if (searchInput) {
-        // Add input event with debounce
-        const debouncedSearch = debounce(handleSearch, 300);
-        searchInput.addEventListener('input', debouncedSearch);
-    }
-
-    if (searchButton) {
-        searchButton.addEventListener('click', handleSearch);
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
-        });
-    }
-
-    if (clearButton) {
-        clearButton.addEventListener('click', clearSearch);
-    }
-
-    if (playFilteredButton) {
-        playFilteredButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = playFilteredButton.href;
-        });
-    }
-
-    // Add filter change handlers
-    [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
-        if (filter) {
-            filter.addEventListener('change', handleSearch);
-        }
-    });
-
-    // Add checkbox change handlers
-    [searchTitle, searchChannel].forEach(checkbox => {
-        if (checkbox) {
-            checkbox.addEventListener('change', handleSearch);
-        }
-    });
 }
 
 // Function to clear all search filters
