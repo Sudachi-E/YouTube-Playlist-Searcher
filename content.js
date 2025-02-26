@@ -37,6 +37,7 @@ function createSearchElement() {
                 <option value="1800-3600">30-60 minutes</option>
                 <option value="3600-up">Over 1 hour</option>
             </select>
+            <button id="auto-scroll-toggle" class="enabled">Auto-Scroll: On</button>
             <button id="clear-search-button">Clear</button>
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
         </div>
@@ -393,6 +394,24 @@ function debounce(func, wait) {
     };
 }
 
+// Add isAutoScrollEnabled variable to track auto-scroll state - set to true by default
+let isAutoScrollEnabled = true;
+
+// Function to check if there are any active filters or search terms
+function hasActiveFilters() {
+    const searchTerm = document.querySelector('#playlist-search-input')?.value.trim() || '';
+    const channelFilter = document.querySelector('#channel-filter')?.value || '';
+    const yearFilter = document.querySelector('#year-filter')?.value || '';
+    const viewsFilter = document.querySelector('#views-filter')?.value || '';
+    const durationFilter = document.querySelector('#duration-filter')?.value || '';
+    
+    return searchTerm !== '' || 
+           channelFilter !== '' || 
+           yearFilter !== '' || 
+           viewsFilter !== '' || 
+           durationFilter !== '';
+}
+
 // Function to add event listeners to search interface
 function addSearchEventListeners() {
     const searchInput = document.querySelector('#playlist-search-input');
@@ -404,10 +423,16 @@ function addSearchEventListeners() {
     const durationFilter = document.querySelector('#duration-filter');
     const searchTitle = document.querySelector('#search-title');
     const searchChannel = document.querySelector('#search-channel');
+    const autoScrollToggle = document.querySelector('#auto-scroll-toggle');
     
     if (searchInput) {
-        // Add debounced search
-        const debouncedSearch = debounce(handleSearch, 300);
+        // Add debounced search with conditional auto-scroll
+        const debouncedSearch = debounce(() => {
+            handleSearch();
+            if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
+                autoScrollAndSearch();
+            }
+        }, 300);
         searchInput.addEventListener('input', debouncedSearch);
     }
 
@@ -422,19 +447,110 @@ function addSearchEventListeners() {
         });
     }
 
-    // Add filter change handlers
+    // Add auto-scroll toggle handler
+    if (autoScrollToggle) {
+        autoScrollToggle.addEventListener('click', () => {
+            if (!autoScrollToggle.disabled) {
+                isAutoScrollEnabled = !isAutoScrollEnabled;
+                autoScrollToggle.textContent = `Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}`;
+                autoScrollToggle.classList.toggle('enabled', isAutoScrollEnabled);
+                
+                // Only trigger auto-scroll if there are active filters
+                if (isAutoScrollEnabled && hasActiveFilters()) {
+                    autoScrollAndSearch();
+                }
+            }
+        });
+    }
+
+    // Add filter change handlers with conditional auto-scroll
     [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
         if (filter) {
-            filter.addEventListener('change', handleSearch);
+            filter.addEventListener('change', () => {
+                handleSearch();
+                if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
+                    autoScrollAndSearch();
+                }
+            });
         }
     });
 
-    // Add checkbox change handlers
+    // Add checkbox change handlers with conditional auto-scroll
     [searchTitle, searchChannel].forEach(checkbox => {
         if (checkbox) {
-            checkbox.addEventListener('change', handleSearch);
+            checkbox.addEventListener('change', () => {
+                handleSearch();
+                if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
+                    autoScrollAndSearch();
+                }
+            });
         }
     });
+}
+
+// Function to auto-scroll and search
+async function autoScrollAndSearch() {
+    const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
+    const totalCount = getPlaylistTotalCount();
+    let currentCount = document.querySelectorAll('ytd-playlist-video-renderer').length;
+    let noNewVideosCount = 0;
+    let lastCount = currentCount;
+    let matchCount = 0;
+    
+    // Disable the auto-scroll toggle button while searching
+    const autoScrollToggle = document.querySelector('#auto-scroll-toggle');
+    if (autoScrollToggle) {
+        autoScrollToggle.disabled = true;
+        autoScrollToggle.textContent = 'Auto-Scroll: Searching...';
+    }
+
+    try {
+        // Count current matches
+        document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
+            if (video.style.display !== 'none') {
+                matchCount++;
+            }
+        });
+
+        // Keep scrolling until we've loaded all videos or found enough matches
+        while ((!totalCount || currentCount < totalCount) && noNewVideosCount < 3) {
+            // Scroll to bottom
+            window.scrollTo(0, document.documentElement.scrollHeight);
+            
+            // Wait for new videos to load
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Update counts
+            currentCount = document.querySelectorAll('ytd-playlist-video-renderer').length;
+            
+            // Check if we got new videos
+            if (currentCount === lastCount) {
+                noNewVideosCount++;
+            } else {
+                noNewVideosCount = 0;
+                // Update filters and search results
+                updateChannelFilter();
+                updateYearFilter();
+                handleSearch();
+
+                // Count new matches
+                matchCount = 0;
+                document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
+                    if (video.style.display !== 'none') {
+                        matchCount++;
+                    }
+                });
+            }
+            
+            lastCount = currentCount;
+        }
+    } finally {
+        // Re-enable the button and restore its text when done
+        if (autoScrollToggle) {
+            autoScrollToggle.disabled = false;
+            autoScrollToggle.textContent = `Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}`;
+        }
+    }
 }
 
 // Function to add scroll event listener
@@ -602,6 +718,10 @@ function createSearchInterface() {
             setTimeout(() => {
                 updateChannelFilter();
                 updateYearFilter();
+                // Start auto-scroll if there are active filters
+                if (hasActiveFilters()) {
+                    autoScrollAndSearch();
+                }
             }, 1000);
         }
     }, 500); // Check every 500ms
@@ -619,6 +739,7 @@ function clearSearch() {
     const durationFilter = document.querySelector('#duration-filter');
     const searchTitle = document.querySelector('#search-title');
     const searchChannel = document.querySelector('#search-channel');
+    const autoScrollToggle = document.querySelector('#auto-scroll-toggle');
     
     // Reset input and filters
     if (searchInput) searchInput.value = '';
@@ -645,5 +766,12 @@ function clearSearch() {
     const resultsCount = document.querySelector('#search-results-count');
     if (resultsCount) {
         resultsCount.textContent = `Showing all ${videoItems.length} videos`;
+    }
+
+    // Reset auto-scroll if it's enabled
+    if (autoScrollToggle && isAutoScrollEnabled) {
+        isAutoScrollEnabled = false;
+        autoScrollToggle.textContent = 'Auto-Scroll: Off';
+        autoScrollToggle.classList.remove('enabled');
     }
 } 

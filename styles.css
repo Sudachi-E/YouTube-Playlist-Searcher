@@ -55,6 +55,44 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     height: 16px;
 }
 
+#auto-scroll-toggle {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+#auto-scroll-toggle.enabled {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+#auto-scroll-toggle:hover {
+    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
+}
+
+#auto-scroll-toggle.enabled:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+#auto-scroll-toggle:disabled {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+    color: var(--yt-spec-text-disabled, #909090) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#auto-scroll-toggle:disabled:hover {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+}
+
 #playlist-search-input {
     flex: 2;
     min-width: 200px;
