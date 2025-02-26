@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Playlist Searcher",
+  "name": "YouTube Playlist Search",
   "version": "1.0",
   "description": "Adds search functionality to YouTube playlists",
   "permissions": ["activeTab"],
