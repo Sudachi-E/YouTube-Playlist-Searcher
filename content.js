@@ -7,6 +7,10 @@ function isPlaylistPage() {
 function createSearchElement() {
     const searchContainer = document.createElement('div');
     searchContainer.id = 'playlist-search-container';
+    
+    // Load saved preference before creating the interface
+    isAutoScrollEnabled = loadAutoScrollPreference();
+    
     searchContainer.innerHTML = `
         <div class="search-box">
             <input type="text" id="playlist-search-input" placeholder="Search in playlist...">
@@ -37,7 +41,7 @@ function createSearchElement() {
                 <option value="1800-3600">30-60 minutes</option>
                 <option value="3600-up">Over 1 hour</option>
             </select>
-            <button id="auto-scroll-toggle" class="enabled">Auto-Scroll: On</button>
+            <button id="auto-scroll-toggle" class="${isAutoScrollEnabled ? 'enabled' : ''}">Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}</button>
             <button id="clear-search-button">Clear</button>
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
         </div>
@@ -394,8 +398,39 @@ function debounce(func, wait) {
     };
 }
 
-// Add isAutoScrollEnabled variable to track auto-scroll state - set to true by default
-let isAutoScrollEnabled = true;
+// Add isAutoScrollEnabled variable with default from storage
+let isAutoScrollEnabled = false;
+
+// Function to save auto-scroll preference
+function saveAutoScrollPreference(enabled) {
+    try {
+        localStorage.setItem('youtube-playlist-autoscroll', enabled.toString());
+    } catch (error) {
+        console.error('Error saving auto-scroll preference:', error);
+    }
+}
+
+// Function to load auto-scroll preference
+function loadAutoScrollPreference() {
+    try {
+        const saved = localStorage.getItem('youtube-playlist-autoscroll');
+        return saved === 'true';
+    } catch (error) {
+        console.error('Error loading auto-scroll preference:', error);
+        return false;
+    }
+}
+
+// Function to update auto-scroll button state
+function updateAutoScrollButton(enabled) {
+    const autoScrollToggle = document.querySelector('#auto-scroll-toggle');
+    if (autoScrollToggle) {
+        isAutoScrollEnabled = enabled;
+        autoScrollToggle.textContent = `Auto-Scroll: ${enabled ? 'On' : 'Off'}`;
+        autoScrollToggle.classList.toggle('enabled', enabled);
+        saveAutoScrollPreference(enabled);
+    }
+}
 
 // Function to check if there are any active filters or search terms
 function hasActiveFilters() {
@@ -451,12 +486,11 @@ function addSearchEventListeners() {
     if (autoScrollToggle) {
         autoScrollToggle.addEventListener('click', () => {
             if (!autoScrollToggle.disabled) {
-                isAutoScrollEnabled = !isAutoScrollEnabled;
-                autoScrollToggle.textContent = `Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}`;
-                autoScrollToggle.classList.toggle('enabled', isAutoScrollEnabled);
+                const newState = !isAutoScrollEnabled;
+                updateAutoScrollButton(newState);
                 
                 // Only trigger auto-scroll if there are active filters
-                if (isAutoScrollEnabled && hasActiveFilters()) {
+                if (newState && hasActiveFilters()) {
                     autoScrollAndSearch();
                 }
             }
@@ -718,10 +752,6 @@ function createSearchInterface() {
             setTimeout(() => {
                 updateChannelFilter();
                 updateYearFilter();
-                // Start auto-scroll if there are active filters
-                if (hasActiveFilters()) {
-                    autoScrollAndSearch();
-                }
             }, 1000);
         }
     }, 500); // Check every 500ms
@@ -768,10 +798,8 @@ function clearSearch() {
         resultsCount.textContent = `Showing all ${videoItems.length} videos`;
     }
 
-    // Reset auto-scroll if it's enabled
-    if (autoScrollToggle && isAutoScrollEnabled) {
-        isAutoScrollEnabled = false;
-        autoScrollToggle.textContent = 'Auto-Scroll: Off';
-        autoScrollToggle.classList.remove('enabled');
+    // Keep auto-scroll state but update button appearance
+    if (autoScrollToggle) {
+        updateAutoScrollButton(isAutoScrollEnabled);
     }
 } 
