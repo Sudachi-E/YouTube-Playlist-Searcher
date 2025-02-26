@@ -16,9 +16,17 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Real-time search filtering
 - Search in video titles and/or channel names (toggleable via checkboxes)
 - Case-insensitive matching for both search terms and channel filtering
-- Auto-scrolling to load more videos during search
+- Smart auto-scrolling with persistent user preference
 - Results count display with detailed filter information
 - Clear button to reset all filters instantly
+
+### Auto-Scroll Features
+- **Persistent Preference**: Your auto-scroll setting is saved and remembered across sessions
+- **Smart Activation**: Only triggers when there are active search terms or filters
+- **Visual Feedback**: Button changes appearance to show current state (On/Off/Searching)
+- **Manual Control**: Can be toggled on/off at any time
+- **Progress Indication**: Shows "Searching..." state while loading more videos
+- **Automatic Pause**: Stops when all videos are loaded or no new matches are found
 
 ### Advanced Filtering
 1. **Channel Filter**
@@ -67,6 +75,7 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Real-time updates as you type
 - Detailed results message showing active filters and match count
 - Checkbox controls for search scope (titles/channels)
+- Persistent settings across sessions
 
 ### Technical Features
 - Automatic initialization on playlist pages
@@ -75,6 +84,7 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Preserves YouTube's native functionality
 - Handles single-page-application navigation
 - Automatic cleanup and reinitialize on page changes
+- Local storage for user preferences
 
 ## Usage
 
@@ -87,11 +97,15 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
    - Views dropdown to filter by view count
    - Duration dropdown to filter by video length
 4. Toggle search scope using the checkboxes for titles and channel names
-5. Use the "Play Filtered" button to play matching videos:
+5. Configure auto-scroll preference:
+   - Click the "Auto-Scroll" button to toggle On/Off
+   - Setting is remembered for future sessions
+   - Only activates when searching or filtering
+6. Use the "Play Filtered" button to play matching videos:
    - Left-click to play immediately
    - Right-click to open context menu
    - Middle-click to open in new tab
-6. Click "Clear" to reset all filters and show all videos
+7. Click "Clear" to reset all filters and show all videos
 
 ## Notes
 
@@ -99,4 +113,5 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - All filters can be used individually or combined for precise results
 - The extension preserves YouTube's native styling and theme
 - Search and filtering operations are case-insensitive for better usability
+- Auto-scroll preference is saved in browser's local storage
 - You'll need to create icon files (icon48.png and icon128.png) for the extension or modify the manifest.json to remove the icons section 
