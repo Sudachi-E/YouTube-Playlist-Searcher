@@ -43,7 +43,7 @@ function createSearchElement() {
             </select>
             <button id="auto-scroll-toggle" class="${isAutoScrollEnabled ? 'enabled' : ''}">Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}</button>
             <button id="clear-search-button">Clear</button>
-            <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
+            <button id="play-filtered-button" style="display: none;">Play Filtered Videos</button>
         </div>
         <div class="search-options">
             <label><input type="checkbox" id="search-title" checked> Search in titles</label>
@@ -70,9 +70,34 @@ function updatePlayFilteredUrl() {
             .filter(id => id !== null);
 
         if (videoIds.length > 0) {
-            // Create a temporary playlist using video IDs
-            const playUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
-            playFilteredButton.href = playUrl;
+            // Update button to handle click event
+            playFilteredButton.removeAttribute('href');
+            playFilteredButton.textContent = `Play ${videoIds.length} Filtered Videos`;
+            
+            // Remove any existing click event listeners
+            const newButton = playFilteredButton.cloneNode(true);
+            playFilteredButton.parentNode.replaceChild(newButton, playFilteredButton);
+            
+            newButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Split videos into groups of 50
+                const videoGroups = [];
+                for (let i = 0; i < videoIds.length; i += 50) {
+                    videoGroups.push(videoIds.slice(i, i + 50));
+                }
+                
+                // Create URLs for each group
+                const urls = videoGroups.map(group => 
+                    `https://www.youtube.com/watch_videos?video_ids=${group.join(',')}`
+                );
+                
+                // Open first group in current tab, rest in new tabs
+                window.location.href = urls[0];
+                for (let i = 1; i < urls.length; i++) {
+                    window.open(urls[i], '_blank');
+                }
+            });
         }
     }
 }
