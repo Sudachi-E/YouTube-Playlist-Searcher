@@ -119,8 +119,9 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
     min-width: 80px;
+    text-decoration: none;
     text-align: center;
     display: inline-flex;
     align-items: center;
@@ -138,17 +139,11 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     color: var(--yt-spec-static-brand-white);
 }
 
-#play-filtered-button:disabled {
-    background: var(--yt-spec-static-brand-red, #ff0000);
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
 #clear-search-button:hover {
     background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
 }
 
-#play-filtered-button:hover:not(:disabled) {
+#play-filtered-button:hover {
     background: var(--yt-spec-static-brand-red-hover, #cc0000);
     text-decoration: none;
     color: var(--yt-spec-static-brand-white);
