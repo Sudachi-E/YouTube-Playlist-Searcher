@@ -1,0 +1,185 @@
+#playlist-search-wrapper {
+    padding: 0 0 16px 0;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    clear: both;
+}
+
+/* Hide unavailable videos alert */
+ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
+    display: none !important;
+}
+
+#playlist-search-container {
+    padding: 12px;
+    background: var(--yt-spec-brand-background-primary, white);
+    width: 100%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin: 0 24px;
+    width: calc(100% - 48px);
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-options {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+    font-size: 14px;
+    color: var(--yt-spec-text-primary);
+}
+
+.search-options label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.search-options input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+#auto-scroll-toggle {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+#auto-scroll-toggle.enabled {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+#auto-scroll-toggle:hover {
+    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
+}
+
+#auto-scroll-toggle.enabled:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+#auto-scroll-toggle:disabled {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+    color: var(--yt-spec-text-disabled, #909090) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#auto-scroll-toggle:disabled:hover {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+}
+
+#playlist-search-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary, white);
+    color: var(--yt-spec-text-primary);
+}
+
+#playlist-search-input:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+#playlist-search-button,
+#play-filtered-button,
+#clear-search-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+    min-width: 80px;
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+#clear-search-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+}
+
+#play-filtered-button {
+    background: var(--yt-spec-static-brand-red, #ff0000);
+    color: var(--yt-spec-static-brand-white);
+}
+
+#clear-search-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
+}
+
+#play-filtered-button:hover {
+    background: var(--yt-spec-static-brand-red-hover, #cc0000);
+    text-decoration: none;
+    color: var(--yt-spec-static-brand-white);
+}
+
+#search-results-count {
+    font-size: 13px;
+    color: var(--yt-spec-text-secondary);
+    margin-top: 8px;
+}
+
+.filter-options {
+    margin: 8px 0;
+    width: 100%;
+}
+
+#channel-filter,
+#year-filter,
+#views-filter,
+#duration-filter {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary, white);
+    color: var(--yt-spec-text-primary);
+    cursor: pointer;
+}
+
+#channel-filter:focus,
+#year-filter:focus,
+#views-filter:focus,
+#duration-filter:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+} 
