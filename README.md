@@ -63,6 +63,25 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
      - 30-60 minutes
      - Over 1 hour
 
+5. **Group Filters**
+   - Create and manage reusable filter groups:
+     - **Keyword Groups**: Filter videos containing specific words/phrases
+     - **Channel Groups**: Filter videos from specific channels
+   - Features:
+     - Create multiple groups with custom names
+     - Add multiple items to each group (comma-separated)
+     - Toggle groups on/off independently
+     - Edit existing groups (name and items)
+     - Delete unwanted groups
+     - Groups persist across sessions
+     - Combine multiple active groups
+     - Works with other filters and search
+   - Use Cases:
+     - Filter multiple tutorial-related terms at once
+     - Group favorite educational channels together
+     - Create topic-based filters (e.g., "Programming", "Music")
+     - Save frequently used search combinations
+
 ### Playback Features
 - **Play Filtered**: Create and play a temporary playlist of only the filtered/matching videos
 - **Right-Click Support**: Open filtered playlist in new tab via right-click or middle-click
@@ -75,6 +94,7 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Real-time updates as you type
 - Detailed results message showing active filters and match count
 - Checkbox controls for search scope (titles/channels)
+- Modal interface for managing filter groups
 - Persistent settings across sessions
 
 ### Technical Features
@@ -84,7 +104,8 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Preserves YouTube's native functionality
 - Handles single-page-application navigation
 - Automatic cleanup and reinitialize on page changes
-- Local storage for user preferences
+- Local storage for user preferences and filter groups
+- Auto-scroll support for all filter types
 
 ## Usage
 
@@ -96,16 +117,16 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
    - Year dropdown to filter by upload year
    - Views dropdown to filter by view count
    - Duration dropdown to filter by video length
+   - Group filters for bulk filtering:
+     1. Click "Group Filters" button
+     2. Choose Keywords or Channels tab
+     3. Click "Add Group" to create a new group
+     4. Enter group name and items
+     5. Toggle groups on/off as needed
 4. Toggle search scope using the checkboxes for titles and channel names
-5. Configure auto-scroll preference:
-   - Click the "Auto-Scroll" button to toggle On/Off
-   - Setting is remembered for future sessions
-   - Only activates when searching or filtering
-6. Use the "Play Filtered" button to play matching videos:
-   - Left-click to play immediately
-   - Right-click to open context menu
-   - Middle-click to open in new tab
-7. Click "Clear" to reset all filters and show all videos
+5. Enable auto-scroll to automatically load and filter all playlist videos
+6. Use "Clear" to reset all filters
+7. Click "Play Filtered" to watch matching videos
 
 ## Notes
 

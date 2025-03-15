@@ -182,4 +182,214 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 #duration-filter:focus {
     outline: none;
     border-color: var(--yt-spec-brand-button-background);
+}
+
+/* Group Filters Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--yt-spec-brand-background-primary, white);
+    margin: 10% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--yt-spec-text-primary);
+    font-size: 20px;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--yt-spec-text-secondary);
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--yt-spec-text-secondary);
+    font-size: 14px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.group-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    background: var(--yt-spec-badge-chip-background);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.filter-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.filter-group-name {
+    font-weight: 500;
+    color: var(--yt-spec-text-primary);
+}
+
+.filter-group-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-group-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-item {
+    background: var(--yt-spec-brand-background-primary);
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--yt-spec-text-primary);
+    user-select: none;
+}
+
+.add-group-button {
+    width: 100%;
+    padding: 8px;
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-group-button:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+#group-filters-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+#group-filters-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
+}
+
+#group-filters-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.toggle-group-button,
+.edit-group-button,
+.delete-group-button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.toggle-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+    min-width: 60px;
+}
+
+.toggle-group-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.edit-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+}
+
+.edit-group-button:hover {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.delete-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+}
+
+.delete-group-button:hover {
+    background: var(--yt-spec-error-background);
+    color: var(--yt-spec-error-text);
+}
+
+.filter-group:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
 } 

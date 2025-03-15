@@ -41,6 +41,7 @@ function createSearchElement() {
                 <option value="1800-3600">30-60 minutes</option>
                 <option value="3600-up">Over 1 hour</option>
             </select>
+            <button id="group-filters-button" class="filter-button">Group Filters</button>
             <button id="auto-scroll-toggle" class="${isAutoScrollEnabled ? 'enabled' : ''}">Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}</button>
             <button id="clear-search-button">Clear</button>
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
@@ -50,6 +51,32 @@ function createSearchElement() {
             <label><input type="checkbox" id="search-channel" checked> Search in channel names</label>
         </div>
         <div id="search-results-count"></div>
+        
+        <!-- Group Filters Modal -->
+        <div id="group-filters-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Group Filters</h2>
+                    <button class="close-button">&times;</button>
+                </div>
+                <div class="modal-tabs">
+                    <button class="tab-button active" data-tab="keywords">Keywords</button>
+                    <button class="tab-button" data-tab="channels">Channels</button>
+                </div>
+                <div class="tab-content" id="keywords-tab">
+                    <div class="group-list">
+                        <!-- Keyword groups will be populated here -->
+                    </div>
+                    <button class="add-group-button">Add Keyword Group</button>
+                </div>
+                <div class="tab-content" id="channels-tab" style="display: none;">
+                    <div class="group-list">
+                        <!-- Channel groups will be populated here -->
+                    </div>
+                    <button class="add-group-button">Add Channel Group</button>
+                </div>
+            </div>
+        </div>
     `;
     return searchContainer;
 }
@@ -225,22 +252,242 @@ function formatDuration(seconds) {
     }
 }
 
-// Function to check if video matches search
+// Function to load saved filter groups from storage
+function loadFilterGroups() {
+    const savedGroups = localStorage.getItem('youtubePlaylistFilterGroups');
+    return savedGroups ? JSON.parse(savedGroups) : {
+        keywords: [],
+        channels: []
+    };
+}
+
+// Function to save filter groups to storage
+function saveFilterGroups(groups) {
+    localStorage.setItem('youtubePlaylistFilterGroups', JSON.stringify(groups));
+}
+
+// Function to create a new filter group
+function createFilterGroup(type, name, items) {
+    const groups = loadFilterGroups();
+    groups[type].push({
+        id: Date.now(),
+        name,
+        items,
+        active: false
+    });
+    saveFilterGroups(groups);
+    renderFilterGroups();
+}
+
+// Function to delete a filter group
+function deleteFilterGroup(type, id) {
+    const groups = loadFilterGroups();
+    groups[type] = groups[type].filter(group => group.id !== id);
+    saveFilterGroups(groups);
+    renderFilterGroups();
+    handleSearch(); // Refresh search results
+}
+
+// Function to toggle a filter group
+function toggleFilterGroup(type, id) {
+    const groups = loadFilterGroups();
+    const group = groups[type].find(g => g.id === id);
+    if (group) {
+        group.active = !group.active;
+        saveFilterGroups(groups);
+        renderFilterGroups();
+        handleSearch(); // Refresh search results
+        
+        // Trigger auto-scroll if enabled and filters are active
+        const autoScrollToggle = document.querySelector('#auto-scroll-toggle');
+        if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
+            autoScrollAndSearch();
+        }
+    }
+}
+
+// Function to edit a filter group
+function editFilterGroup(type, id) {
+    const groups = loadFilterGroups();
+    const group = groups[type].find(g => g.id === id);
+    if (!group) return;
+    
+    // Prompt for new name, pre-filled with current name
+    const newName = prompt('Enter new group name:', group.name);
+    if (!newName) return;
+    
+    // Prompt for new items, pre-filled with current items
+    const newItemsStr = prompt('Enter items (comma-separated):', group.items.join(', '));
+    if (!newItemsStr) return;
+    
+    const newItems = newItemsStr.split(',').map(item => item.trim()).filter(item => item);
+    if (newItems.length === 0) return;
+    
+    // Update the group
+    group.name = newName;
+    group.items = newItems;
+    saveFilterGroups(groups);
+    renderFilterGroups();
+    handleSearch(); // Refresh search results
+}
+
+// Function to render filter groups in the modal
+function renderFilterGroups() {
+    const groups = loadFilterGroups();
+    const keywordsList = document.querySelector('#keywords-tab .group-list');
+    const channelsList = document.querySelector('#channels-tab .group-list');
+
+    if (keywordsList) {
+        keywordsList.innerHTML = groups.keywords.map(group => `
+            <div class="filter-group" data-group-id="${group.id}" data-group-type="keywords">
+                <div class="filter-group-header">
+                    <span class="filter-group-name">${group.name}</span>
+                    <div class="filter-group-actions">
+                        <button class="toggle-group-button ${group.active ? 'active' : ''}">
+                            ${group.active ? 'Active' : 'Inactive'}
+                        </button>
+                        <button class="edit-group-button">Edit</button>
+                        <button class="delete-group-button">Delete</button>
+                    </div>
+                </div>
+                <div class="filter-group-items">
+                    ${group.items.map(item => `<span class="filter-item">${item}</span>`).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        // Attach event listeners to keyword group buttons
+        keywordsList.querySelectorAll('.filter-group').forEach(groupElement => {
+            const groupId = parseInt(groupElement.dataset.groupId);
+            const toggleButton = groupElement.querySelector('.toggle-group-button');
+            const editButton = groupElement.querySelector('.edit-group-button');
+            const deleteButton = groupElement.querySelector('.delete-group-button');
+
+            toggleButton.addEventListener('click', () => {
+                toggleFilterGroup('keywords', groupId);
+            });
+
+            editButton.addEventListener('click', () => {
+                editFilterGroup('keywords', groupId);
+            });
+
+            deleteButton.addEventListener('click', () => {
+                deleteFilterGroup('keywords', groupId);
+            });
+        });
+    }
+
+    if (channelsList) {
+        channelsList.innerHTML = groups.channels.map(group => `
+            <div class="filter-group" data-group-id="${group.id}" data-group-type="channels">
+                <div class="filter-group-header">
+                    <span class="filter-group-name">${group.name}</span>
+                    <div class="filter-group-actions">
+                        <button class="toggle-group-button ${group.active ? 'active' : ''}">
+                            ${group.active ? 'Active' : 'Inactive'}
+                        </button>
+                        <button class="edit-group-button">Edit</button>
+                        <button class="delete-group-button">Delete</button>
+                    </div>
+                </div>
+                <div class="filter-group-items">
+                    ${group.items.map(item => `<span class="filter-item">${item}</span>`).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        // Attach event listeners to channel group buttons
+        channelsList.querySelectorAll('.filter-group').forEach(groupElement => {
+            const groupId = parseInt(groupElement.dataset.groupId);
+            const toggleButton = groupElement.querySelector('.toggle-group-button');
+            const editButton = groupElement.querySelector('.edit-group-button');
+            const deleteButton = groupElement.querySelector('.delete-group-button');
+
+            toggleButton.addEventListener('click', () => {
+                toggleFilterGroup('channels', groupId);
+            });
+
+            editButton.addEventListener('click', () => {
+                editFilterGroup('channels', groupId);
+            });
+
+            deleteButton.addEventListener('click', () => {
+                deleteFilterGroup('channels', groupId);
+            });
+        });
+    }
+}
+
+// Function to show the group filters modal
+function showGroupFiltersModal() {
+    const modal = document.querySelector('#group-filters-modal');
+    if (modal) {
+        modal.style.display = 'block';
+        // Ensure the first tab is visible and active by default
+        const firstTab = document.querySelector('.tab-button');
+        const firstTabContent = document.querySelector('.tab-content');
+        if (firstTab && firstTabContent) {
+            firstTab.classList.add('active');
+            firstTabContent.style.display = 'block';
+        }
+        // Render the groups
+        renderFilterGroups();
+    }
+}
+
+// Function to hide the group filters modal
+function hideGroupFiltersModal() {
+    const modal = document.querySelector('#group-filters-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Function to handle tab switching in the modal
+function switchTab(tabName) {
+    const tabs = document.querySelectorAll('.tab-button');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+    
+    contents.forEach(content => {
+        content.style.display = content.id === `${tabName}-tab` ? 'block' : 'none';
+    });
+}
+
+// Function to show the add group dialog
+function showAddGroupDialog(type) {
+    const name = prompt('Enter group name:');
+    if (!name) return;
+    
+    const itemsStr = prompt('Enter items (comma-separated):');
+    if (!itemsStr) return;
+    
+    const items = itemsStr.split(',').map(item => item.trim()).filter(item => item);
+    if (items.length === 0) return;
+    
+    createFilterGroup(type, name, items);
+}
+
+// Modified videoMatchesSearch function to include group filters
 function videoMatchesSearch(video, searchTerm) {
     const title = video.querySelector('#video-title')?.textContent.toLowerCase() || '';
     const channelElement = video.querySelector('#channel-name a');
     const channelName = channelElement?.textContent.trim() || '';
+    
+    // Check existing filters first
     const selectedChannel = document.querySelector('#channel-filter')?.value || '';
     const selectedYear = document.querySelector('#year-filter')?.value || '';
     const selectedViews = document.querySelector('#views-filter')?.value || '';
     const selectedDuration = document.querySelector('#duration-filter')?.value || '';
     
-    // Check channel filter first - case-insensitive match
+    // Apply existing filter checks
     if (selectedChannel && channelName.toLowerCase() !== selectedChannel.toLowerCase()) {
         return false;
     }
     
-    // Check year filter
     if (selectedYear) {
         const dateElement = video.querySelector('ytd-video-meta-block #metadata-line span:last-child, #video-info span:last-child');
         if (dateElement) {
@@ -262,7 +509,6 @@ function videoMatchesSearch(video, searchTerm) {
         }
     }
     
-    // Check views filter
     if (selectedViews) {
         const viewsElement = video.querySelector('ytd-video-meta-block #metadata-line span:first-child, #video-info span:first-child');
         if (viewsElement) {
@@ -276,7 +522,6 @@ function videoMatchesSearch(video, searchTerm) {
         }
     }
 
-    // Check duration filter
     if (selectedDuration) {
         const timeElement = video.querySelector('#text.ytd-thumbnail-overlay-time-status-renderer');
         if (timeElement) {
@@ -288,6 +533,32 @@ function videoMatchesSearch(video, searchTerm) {
         } else {
             return false;
         }
+    }
+    
+    // Apply group filters
+    const groups = loadFilterGroups();
+    
+    // Check keyword groups
+    const activeKeywordGroups = groups.keywords.filter(g => g.active);
+    if (activeKeywordGroups.length > 0) {
+        const matchesAnyKeywordGroup = activeKeywordGroups.some(group => 
+            group.items.some(keyword => 
+                title.includes(keyword.toLowerCase()) || 
+                channelName.toLowerCase().includes(keyword.toLowerCase())
+            )
+        );
+        if (!matchesAnyKeywordGroup) return false;
+    }
+    
+    // Check channel groups
+    const activeChannelGroups = groups.channels.filter(g => g.active);
+    if (activeChannelGroups.length > 0) {
+        const matchesAnyChannelGroup = activeChannelGroups.some(group =>
+            group.items.some(channel => 
+                channelName.toLowerCase() === channel.toLowerCase()
+            )
+        );
+        if (!matchesAnyChannelGroup) return false;
     }
     
     // If no search term, only apply filters
@@ -440,11 +711,18 @@ function hasActiveFilters() {
     const viewsFilter = document.querySelector('#views-filter')?.value || '';
     const durationFilter = document.querySelector('#duration-filter')?.value || '';
     
+    // Check for active group filters
+    const groups = loadFilterGroups();
+    const hasActiveKeywordGroup = groups.keywords.some(g => g.active);
+    const hasActiveChannelGroup = groups.channels.some(g => g.active);
+    
     return searchTerm !== '' || 
            channelFilter !== '' || 
            yearFilter !== '' || 
            viewsFilter !== '' || 
-           durationFilter !== '';
+           durationFilter !== '' ||
+           hasActiveKeywordGroup ||
+           hasActiveChannelGroup;
 }
 
 // Function to add event listeners to search interface
@@ -520,6 +798,9 @@ function addSearchEventListeners() {
             });
         }
     });
+
+    // Add group filter event listeners
+    addGroupFilterEventListeners();
 }
 
 // Function to auto-scroll and search
@@ -802,4 +1083,53 @@ function clearSearch() {
     if (autoScrollToggle) {
         updateAutoScrollButton(isAutoScrollEnabled);
     }
+}
+
+// Function to add event listeners for group filters
+function addGroupFilterEventListeners() {
+    const groupFiltersButton = document.querySelector('#group-filters-button');
+    const closeButton = document.querySelector('.close-button');
+    const modal = document.querySelector('#group-filters-modal');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const addGroupButtons = document.querySelectorAll('.add-group-button');
+    
+    if (groupFiltersButton) {
+        groupFiltersButton.addEventListener('click', () => {
+            showGroupFiltersModal();
+            // Ensure groups are rendered immediately
+            renderFilterGroups();
+            // Make sure the first tab is active
+            const firstTab = document.querySelector('.tab-button');
+            if (firstTab) {
+                switchTab(firstTab.dataset.tab);
+            }
+        });
+    }
+    
+    if (closeButton) {
+        closeButton.addEventListener('click', hideGroupFiltersModal);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideGroupFiltersModal();
+            }
+        });
+    }
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            switchTab(button.dataset.tab);
+            // Re-render groups when switching tabs
+            renderFilterGroups();
+        });
+    });
+    
+    addGroupButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const type = button.closest('.tab-content').id.replace('-tab', '');
+            showAddGroupDialog(type);
+        });
+    });
 } 
