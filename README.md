@@ -66,10 +66,15 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 5. **Group Filters**
    - Create and manage reusable filter groups:
      - **Keyword Groups**: Filter videos containing specific words/phrases
-     - **Channel Groups**: Filter videos from specific channels
+     - **Channel Groups**: Filter videos from specific channels using a visual selector
    - Features:
      - Create multiple groups with custom names
-     - Add multiple items to each group (comma-separated)
+     - Add multiple items to each group
+     - Visual channel selection interface:
+       - Checkbox-based selection of channels
+       - Search functionality to find channels quickly
+       - Shows all available channels in the playlist
+       - Pre-selects existing channels when editing
      - Toggle groups on/off independently
      - Edit existing groups (name and items)
      - Delete unwanted groups
@@ -94,7 +99,8 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
 - Real-time updates as you type
 - Detailed results message showing active filters and match count
 - Checkbox controls for search scope (titles/channels)
-- Modal interface for managing filter groups
+- Modal interfaces for managing filter groups and channel selection
+- Visual channel selection with search capability
 - Persistent settings across sessions
 
 ### Technical Features
@@ -121,8 +127,13 @@ This Chrome extension adds powerful search and filtering functionality to YouTub
      1. Click "Group Filters" button
      2. Choose Keywords or Channels tab
      3. Click "Add Group" to create a new group
-     4. Enter group name and items
-     5. Toggle groups on/off as needed
+     4. For keyword groups: Enter comma-separated keywords
+     5. For channel groups: Use the visual selector to choose channels:
+        - Browse the list of available channels
+        - Use the search box to find specific channels
+        - Check/uncheck channels to select them
+        - Click "Confirm" to save your selection
+     6. Toggle groups on/off as needed
 4. Toggle search scope using the checkboxes for titles and channel names
 5. Enable auto-scroll to automatically load and filter all playlist videos
 6. Use "Clear" to reset all filters

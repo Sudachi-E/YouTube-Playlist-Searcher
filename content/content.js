@@ -306,8 +306,109 @@ function toggleFilterGroup(type, id) {
     }
 }
 
+// Function to create a channel selection dialog
+function createChannelSelectionDialog(selectedChannels = []) {
+    const dialog = document.createElement('div');
+    dialog.className = 'channel-selection-dialog';
+    
+    // Get all unique channels from the playlist
+    const channels = new Set();
+    document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
+        const channelName = video.querySelector('#channel-name a')?.textContent.trim();
+        if (channelName) channels.add(channelName);
+    });
+    
+    const sortedChannels = Array.from(channels).sort();
+    
+    dialog.innerHTML = `
+        <div class="channel-selection-content">
+            <div class="channel-selection-header">
+                <h3>Select Channels</h3>
+                <button class="close-dialog-button">&times;</button>
+            </div>
+            <div class="channel-selection-search">
+                <input type="text" placeholder="Search channels..." class="channel-search-input">
+            </div>
+            <div class="channel-list">
+                ${sortedChannels.map(channel => `
+                    <label class="channel-option">
+                        <input type="checkbox" value="${channel}" 
+                            ${selectedChannels.includes(channel) ? 'checked' : ''}>
+                        <span>${channel}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <div class="channel-selection-actions">
+                <button class="confirm-selection-button">Confirm</button>
+                <button class="cancel-selection-button">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // Add search functionality
+    const searchInput = dialog.querySelector('.channel-search-input');
+    const channelOptions = dialog.querySelectorAll('.channel-option');
+    
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        channelOptions.forEach(option => {
+            const channelName = option.querySelector('span').textContent.toLowerCase();
+            option.style.display = channelName.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    return new Promise((resolve, reject) => {
+        const closeDialog = () => {
+            document.body.removeChild(dialog);
+            reject();
+        };
+        
+        dialog.querySelector('.close-dialog-button').addEventListener('click', closeDialog);
+        dialog.querySelector('.cancel-selection-button').addEventListener('click', closeDialog);
+        
+        dialog.querySelector('.confirm-selection-button').addEventListener('click', () => {
+            const selectedChannels = Array.from(dialog.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.value);
+            document.body.removeChild(dialog);
+            resolve(selectedChannels);
+        });
+        
+        // Close if clicking outside the content area
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                closeDialog();
+            }
+        });
+    });
+}
+
+// Function to show the add group dialog
+async function showAddGroupDialog(type) {
+    const name = prompt('Enter group name:');
+    if (!name) return;
+    
+    let items = [];
+    if (type === 'channels') {
+        try {
+            items = await createChannelSelectionDialog();
+            if (!items || items.length === 0) return;
+        } catch {
+            return; // Dialog was cancelled
+        }
+    } else {
+        const itemsStr = prompt('Enter items (comma-separated):');
+        if (!itemsStr) return;
+        items = itemsStr.split(',').map(item => item.trim()).filter(item => item);
+        if (items.length === 0) return;
+    }
+    
+    createFilterGroup(type, name, items);
+}
+
 // Function to edit a filter group
-function editFilterGroup(type, id) {
+async function editFilterGroup(type, id) {
     const groups = loadFilterGroups();
     const group = groups[type].find(g => g.id === id);
     if (!group) return;
@@ -316,12 +417,20 @@ function editFilterGroup(type, id) {
     const newName = prompt('Enter new group name:', group.name);
     if (!newName) return;
     
-    // Prompt for new items, pre-filled with current items
-    const newItemsStr = prompt('Enter items (comma-separated):', group.items.join(', '));
-    if (!newItemsStr) return;
-    
-    const newItems = newItemsStr.split(',').map(item => item.trim()).filter(item => item);
-    if (newItems.length === 0) return;
+    let newItems = [];
+    if (type === 'channels') {
+        try {
+            newItems = await createChannelSelectionDialog(group.items);
+            if (!newItems || newItems.length === 0) return;
+        } catch {
+            return; // Dialog was cancelled
+        }
+    } else {
+        const newItemsStr = prompt('Enter items (comma-separated):', group.items.join(', '));
+        if (!newItemsStr) return;
+        newItems = newItemsStr.split(',').map(item => item.trim()).filter(item => item);
+        if (newItems.length === 0) return;
+    }
     
     // Update the group
     group.name = newName;
@@ -455,20 +564,6 @@ function switchTab(tabName) {
     contents.forEach(content => {
         content.style.display = content.id === `${tabName}-tab` ? 'block' : 'none';
     });
-}
-
-// Function to show the add group dialog
-function showAddGroupDialog(type) {
-    const name = prompt('Enter group name:');
-    if (!name) return;
-    
-    const itemsStr = prompt('Enter items (comma-separated):');
-    if (!itemsStr) return;
-    
-    const items = itemsStr.split(',').map(item => item.trim()).filter(item => item);
-    if (items.length === 0) return;
-    
-    createFilterGroup(type, name, items);
 }
 
 // Modified videoMatchesSearch function to include group filters

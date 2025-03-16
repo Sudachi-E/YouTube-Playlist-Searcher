@@ -392,4 +392,147 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 .filter-group:hover {
     background: var(--yt-spec-badge-chip-background-hover);
-} 
+}
+
+/* Channel Selection Dialog Styles */
+.channel-selection-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.channel-selection-content {
+    background: var(--yt-spec-brand-background-primary, white);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.channel-selection-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.channel-selection-header h3 {
+    margin: 0;
+    color: var(--yt-spec-text-primary);
+    font-size: 18px;
+}
+
+.close-dialog-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--yt-spec-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.channel-selection-search {
+    padding: 16px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    box-sizing: border-box;
+}
+
+.channel-search-input {
+    width: calc(100% - 24px);
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary);
+    color: var(--yt-spec-text-primary);
+    box-sizing: border-box;
+    margin: 0 12px;
+}
+
+.channel-search-input:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+.channel-list {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.channel-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.channel-option:hover {
+    background: var(--yt-spec-badge-chip-background);
+}
+
+.channel-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.channel-option span {
+    color: var(--yt-spec-text-primary);
+    font-size: 14px;
+}
+
+.channel-selection-actions {
+    padding: 16px;
+    border-top: 1px solid var(--yt-spec-text-secondary);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.confirm-selection-button,
+.cancel-selection-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.confirm-selection-button {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.confirm-selection-button:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+.cancel-selection-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+}
+
+.cancel-selection-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
+}
