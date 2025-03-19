@@ -1,149 +1,130 @@
 # YouTube Playlist Search Extension
 
-This Chrome extension adds powerful search and filtering functionality to YouTube playlists, making it easier to find and manage videos within large playlists.
-
-## Installation
-
-1. Download or clone this repository to your local machine
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the folder containing the extension files
-5. The extension will be installed and ready to use
+A powerful Chrome extension that enhances YouTube playlists with advanced search, filtering, and organization capabilities. Perfect for managing and navigating large playlists efficiently.
 
 ## Features
 
-### Search Functionality
-- Real-time search filtering
-- Search in video titles and/or channel names (toggleable via checkboxes)
-- Case-insensitive matching for both search terms and channel filtering
-- Smart auto-scrolling with persistent user preference
-- Results count display with detailed filter information
-- Clear button to reset all filters instantly
+### Core Search & Filter
+- **Real-time Search**
+  - Instant filtering as you type
+  - Search in video titles and/or channel names
+  - Case-insensitive matching
+  - Clear results count with filter details
+  - One-click reset for all filters
 
-### Auto-Scroll Features
-- **Persistent Preference**: Your auto-scroll setting is saved and remembered across sessions
-- **Smart Activation**: Only triggers when there are active search terms or filters
-- **Visual Feedback**: Button changes appearance to show current state (On/Off/Searching)
-- **Manual Control**: Can be toggled on/off at any time
-- **Progress Indication**: Shows "Searching..." state while loading more videos
-- **Automatic Pause**: Stops when all videos are loaded or no new matches are found
-
-### Advanced Filtering
+### Smart Filtering System
 1. **Channel Filter**
-   - Filter videos by specific channels
-   - Case-insensitive matching (e.g., "Channel Name" matches "channel name")
-   - Automatically populated with channels in the playlist
-   - Updates dynamically as new videos are loaded
-   - Dropdown menu for easy selection
+   - Dynamic dropdown with all channels in playlist
+   - Auto-updates as videos load
+   - Case-insensitive matching
 
 2. **Year Filter**
-   - Filter videos by upload year
-   - Supports both direct years and "X years ago" format
-   - Automatically populated with available years
-   - Sorted newest to oldest
+   - Filter by upload year
+   - Supports both absolute years and relative dates
+   - Auto-populated and sorted
 
 3. **Views Filter**
-   - Filter by view count ranges:
-     - 1B+ views
-     - 100M-1B views
-     - 10M-100M views
-     - 1M-10M views
-     - 100K-1M views
-     - 10K-100K views
-     - 1K-10K views
-     - Under 1K views
+   - Predefined ranges from "Under 1K" to "1B+"
+   - Easy-to-use dropdown selection
+   - Covers all common view count ranges
 
 4. **Duration Filter**
-   - Filter videos by length:
-     - Under 1 minute
-     - 1-5 minutes
-     - 5-10 minutes
-     - 10-20 minutes
-     - 20-30 minutes
-     - 30-60 minutes
-     - Over 1 hour
+   - Ranges from "Under 1 minute" to "Over 1 hour"
+   - Quick access to common duration ranges
+   - Perfect for finding specific video lengths
 
-5. **Group Filters**
-   - Create and manage reusable filter groups:
-     - **Keyword Groups**: Filter videos containing specific words/phrases
-     - **Channel Groups**: Filter videos from specific channels using a visual selector
-   - Features:
-     - Create multiple groups with custom names
-     - Add multiple items to each group
-     - Visual channel selection interface:
-       - Checkbox-based selection of channels
-       - Search functionality to find channels quickly
-       - Shows all available channels in the playlist
-       - Pre-selects existing channels when editing
-     - Toggle groups on/off independently
-     - Edit existing groups (name and items)
-     - Delete unwanted groups
-     - Groups persist across sessions
-     - Combine multiple active groups
-     - Works with other filters and search
-   - Use Cases:
-     - Filter multiple tutorial-related terms at once
-     - Group favorite educational channels together
-     - Create topic-based filters (e.g., "Programming", "Music")
-     - Save frequently used search combinations
+### Group Filters
+- **Create Custom Filter Groups**
+  - Keywords Groups: Filter by multiple terms
+  - Channel Groups: Filter by multiple channels
+  
+- **Modern Channel Selection**
+  - Visual checkbox interface
+  - Search through available channels
+  - Quick multi-select capability
+  - Pre-selection when editing groups
+
+- **Group Management**
+  - Toggle groups on/off
+  - Edit existing groups
+  - Delete unwanted groups
+  - Persistent storage across sessions
+
+### Smart Auto-Scroll
+- Remembers your preference
+- Only activates with active filters
+- Visual status indication
+- Intelligent loading detection
+- Automatic pause when complete
 
 ### Playback Features
-- **Play Filtered**: Create and play a temporary playlist of only the filtered/matching videos
-- **Right-Click Support**: Open filtered playlist in new tab via right-click or middle-click
-- **Dynamic Updates**: Playlist URL updates automatically as search results change
+- "Play Filtered" for matching videos
+- Creates temporary filtered playlist
+- Supports right-click/middle-click
+- Dynamic URL updates
 
-### User Interface
-- Clean, modern design that matches YouTube's aesthetic
-- Responsive layout that adapts to different screen sizes
-- Works seamlessly with both light and dark themes
-- Real-time updates as you type
-- Detailed results message showing active filters and match count
-- Checkbox controls for search scope (titles/channels)
-- Modal interfaces for managing filter groups and channel selection
-- Visual channel selection with search capability
-- Persistent settings across sessions
+## Installation
 
-### Technical Features
-- Automatic initialization on playlist pages
-- Dynamic video loading detection
-- Efficient search with debounced updates
-- Preserves YouTube's native functionality
-- Handles single-page-application navigation
-- Automatic cleanup and reinitialize on page changes
-- Local storage for user preferences and filter groups
-- Auto-scroll support for all filter types
+1. Download/clone this repository
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode" (top right)
+4. Click "Load unpacked"
+5. Select the extension folder
+6. Ready to use on any YouTube playlist!
 
 ## Usage
 
-1. Navigate to any YouTube playlist page
-2. The search interface will appear automatically below the playlist header
-3. Use any combination of:
-   - Search box to find videos by title or channel name
-   - Channel dropdown to filter by specific channels
-   - Year dropdown to filter by upload year
-   - Views dropdown to filter by view count
-   - Duration dropdown to filter by video length
-   - Group filters for bulk filtering:
-     1. Click "Group Filters" button
-     2. Choose Keywords or Channels tab
-     3. Click "Add Group" to create a new group
-     4. For keyword groups: Enter comma-separated keywords
-     5. For channel groups: Use the visual selector to choose channels:
-        - Browse the list of available channels
-        - Use the search box to find specific channels
-        - Check/uncheck channels to select them
-        - Click "Confirm" to save your selection
-     6. Toggle groups on/off as needed
-4. Toggle search scope using the checkboxes for titles and channel names
-5. Enable auto-scroll to automatically load and filter all playlist videos
-6. Use "Clear" to reset all filters
-7. Click "Play Filtered" to watch matching videos
+### Basic Search
+1. Go to any YouTube playlist
+2. Use the search box to find videos
+3. Toggle title/channel name search with checkboxes
+4. Clear results with one click
 
-## Notes
+### Using Filters
+- **Channel Filter**: Select from available channels
+- **Year Filter**: Choose upload year
+- **Views Filter**: Select view count range
+- **Duration Filter**: Choose video length range
 
-- The extension automatically handles YouTube's dynamic loading of videos
-- All filters can be used individually or combined for precise results
-- The extension preserves YouTube's native styling and theme
-- Search and filtering operations are case-insensitive for better usability
-- Auto-scroll preference is saved in browser's local storage
-- You'll need to create icon files (icon48.png and icon128.png) for the extension or modify the manifest.json to remove the icons section 
+### Group Filters
+1. Click "Group Filters"
+2. Choose Keywords or Channels tab
+3. Click "Add Group"
+4. For Keywords:
+   - Enter group name
+   - Add comma-separated keywords
+5. For Channels:
+   - Enter group name
+   - Use visual selector to choose channels
+   - Search to find specific channels
+   - Check desired channels
+   - Click Confirm
+6. Toggle groups as needed
+
+### Auto-Scroll
+- Click the Auto-Scroll toggle
+- Watch as it loads all playlist videos
+- Filter results update automatically
+- Setting persists across sessions
+
+### Playing Filtered Results
+- Click "Play Filtered" to watch matches
+- Opens as a new temporary playlist
+- Right-click for more options
+- Updates as filters change
+
+## Technical Details
+
+- Built for Chrome using Manifest V3
+- Uses local storage for preferences
+- Supports YouTube's SPA navigation
+- Maintains YouTube's native styling
+- Works with both light/dark themes
+- Efficient real-time filtering
+- Smart resource management
+
+## Requirements
+
+- Google Chrome browser
+- YouTube playlist access
+- Local storage enabled 

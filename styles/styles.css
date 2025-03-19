@@ -271,19 +271,20 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 .filter-group {
     background: var(--yt-spec-badge-chip-background);
     border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
 }
 
 .filter-group-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .filter-group-name {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 16px;
     color: var(--yt-spec-text-primary);
 }
 
