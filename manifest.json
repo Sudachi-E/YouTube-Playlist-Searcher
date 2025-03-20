@@ -5,7 +5,6 @@
   "name": "YouTube Playlist Search",
   "version": "1.0.1",
   "description": "Goodbye to manually searching through multiple videos in a large playlist",
-  "permissions": ["storage"],
   "host_permissions": ["*://*.youtube.com/*"],
   "content_scripts": [
     {
