@@ -1,12 +1,10 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "YouTube Playlist Search",
   "version": "1.0.2",
   "description": "Goodbye to manually searching through multiple videos in a large playlist",
-  "permissions": [
-    "activeTab",
-    "*://*.youtube.com/*"
-  ],
+  "permissions": ["activeTab"],
+  "host_permissions": ["*://*.youtube.com/*"],
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
@@ -17,14 +15,5 @@
   "icons": {
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "youtube-playlist-search@example.com",
-      "data_collection_permissions": {
-        "required": ["none"]
-      },
-      "strict_min_version": "58.0"
-    }
   }
 } 

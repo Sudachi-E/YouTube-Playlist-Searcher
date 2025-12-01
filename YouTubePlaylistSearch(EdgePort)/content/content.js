@@ -68,7 +68,6 @@ function getVideoMeta(video) {
     videoMetaCache.set(video, updated);
     return updated;
 }
-
 // Function to create search interface element
 function createSearchElement() {
     const searchContainer = document.createElement('div');
@@ -906,7 +905,6 @@ function addSearchEventListeners() {
         });
     }
 
-    // Add filter change handlers with conditional auto-scroll (throttled)
     [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
         if (filter) {
             filter.addEventListener('change', () => {

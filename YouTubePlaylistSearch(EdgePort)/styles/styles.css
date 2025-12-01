@@ -1,0 +1,592 @@
+#playlist-search-wrapper {
+    padding: 0 0 16px 0;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    clear: both;
+}
+
+/* Hide unavailable videos alert */
+ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
+    display: none !important;
+}
+
+#playlist-search-container {
+    padding: 12px;
+    background: var(--yt-spec-brand-background-primary, white);
+    width: 100%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin: 0 24px;
+    width: calc(100% - 48px);
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-options {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+    font-size: 14px;
+    color: var(--yt-spec-text-primary);
+}
+
+.search-options label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.search-options input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+#auto-scroll-toggle {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+#auto-scroll-toggle.enabled {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+#auto-scroll-toggle:hover {
+    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
+}
+
+#auto-scroll-toggle.enabled:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+#auto-scroll-toggle:disabled {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+    color: var(--yt-spec-text-disabled, #909090) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#auto-scroll-toggle:disabled:hover {
+    background: var(--yt-spec-badge-chip-background, #e5e5e5) !important;
+}
+
+#playlist-search-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary, white);
+    color: var(--yt-spec-text-primary);
+}
+
+#playlist-search-input:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+#playlist-search-button,
+#play-filtered-button,
+#clear-search-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+    min-width: 80px;
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+#clear-search-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+}
+
+#play-filtered-button {
+    background: var(--yt-spec-static-brand-red, #ff0000);
+    color: var(--yt-spec-static-brand-white);
+}
+
+#clear-search-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5);
+}
+
+#play-filtered-button:hover {
+    background: var(--yt-spec-static-brand-red-hover, #cc0000);
+    text-decoration: none;
+    color: var(--yt-spec-static-brand-white);
+}
+
+#search-results-count {
+    font-size: 13px;
+    color: var(--yt-spec-text-secondary);
+    margin-top: 8px;
+}
+
+.filter-options {
+    margin: 8px 0;
+    width: 100%;
+}
+
+#channel-filter,
+#year-filter,
+#views-filter,
+#duration-filter {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary, white);
+    color: var(--yt-spec-text-primary);
+    cursor: pointer;
+}
+
+#channel-filter:focus,
+#year-filter:focus,
+#views-filter:focus,
+#duration-filter:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+/* Group Filters Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--yt-spec-brand-background-primary, white);
+    margin: 10% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--yt-spec-text-primary);
+    font-size: 20px;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--yt-spec-text-secondary);
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--yt-spec-text-secondary);
+    font-size: 14px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.group-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    background: var(--yt-spec-badge-chip-background);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.filter-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.filter-group-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--yt-spec-text-primary);
+}
+
+.filter-group-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-group-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-item {
+    background: var(--yt-spec-brand-background-primary);
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--yt-spec-text-primary);
+    user-select: none;
+}
+
+.add-group-button {
+    width: 100%;
+    padding: 8px;
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-group-button:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+#group-filters-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+#group-filters-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
+}
+
+#group-filters-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.toggle-group-button,
+.edit-group-button,
+.delete-group-button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.toggle-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+    min-width: 60px;
+}
+
+.toggle-group-button.active {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.edit-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+}
+
+.edit-group-button:hover {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.delete-group-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-secondary);
+}
+
+.delete-group-button:hover {
+    background: var(--yt-spec-error-background);
+    color: var(--yt-spec-error-text);
+}
+
+.filter-group:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
+}
+
+/* Channel Selection Dialog Styles */
+.channel-selection-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.channel-selection-content {
+    background: var(--yt-spec-brand-background-primary, white);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.channel-selection-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.channel-selection-header h3 {
+    margin: 0;
+    color: var(--yt-spec-text-primary);
+    font-size: 18px;
+}
+
+.close-dialog-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--yt-spec-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.channel-selection-search {
+    padding: 16px;
+    border-bottom: 1px solid var(--yt-spec-text-secondary);
+    box-sizing: border-box;
+}
+
+.channel-search-input {
+    width: calc(100% - 24px);
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary);
+    color: var(--yt-spec-text-primary);
+    box-sizing: border-box;
+    margin: 0 12px;
+}
+
+.channel-search-input:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+.channel-list {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.channel-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.channel-option:hover {
+    background: var(--yt-spec-badge-chip-background);
+}
+
+/* Custom checkbox styles */
+.channel-option input[type="checkbox"] {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border-radius: 3px;
+    border: 2px solid var(--yt-spec-text-secondary);
+    background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: all 0.3s ease;
+}
+
+.channel-option input[type="checkbox"]:checked {
+    background-color: #065fd4; /* YouTube's blue */
+    border-color: #065fd4;
+}
+
+.channel-option input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.channel-option input[type="checkbox"]:checked::after {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+}
+
+/* Add ripple effect on click */
+.channel-option input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #065fd4;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+}
+
+.channel-option input[type="checkbox"]:active::before {
+    opacity: 0.1;
+    transform: scale(1);
+}
+
+.channel-option span {
+    color: var(--yt-spec-text-primary);
+    font-size: 14px;
+    user-select: none;
+}
+
+.channel-selection-actions {
+    padding: 16px;
+    border-top: 1px solid var(--yt-spec-text-secondary);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.confirm-selection-button,
+.cancel-selection-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.confirm-selection-button {
+    background: var(--yt-spec-brand-button-background);
+    color: var(--yt-spec-static-brand-white);
+}
+
+.confirm-selection-button:hover {
+    background: var(--yt-spec-brand-button-background-hover);
+}
+
+.cancel-selection-button {
+    background: var(--yt-spec-badge-chip-background);
+    color: var(--yt-spec-text-primary);
+}
+
+.cancel-selection-button:hover {
+    background: var(--yt-spec-badge-chip-background-hover);
+}

@@ -3,6 +3,71 @@ function isPlaylistPage() {
     return window.location.href.includes('/playlist?list=');
 }
 
+function getVideoItems() {
+    return document.querySelectorAll('ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+}
+
+function getTitleText(video) {
+    const titleEl = video.querySelector('#video-title')
+        || video.querySelector('a#video-title')
+        || video.querySelector('yt-formatted-string#video-title');
+    return (titleEl?.textContent || '').toLowerCase();
+}
+
+function getChannelNameText(video) {
+    const channelEl = video.querySelector('ytd-channel-name#channel-name a')
+        || video.querySelector('#channel-name a')
+        || video.querySelector('a[href^="/@"]');
+    return (channelEl?.textContent || '').trim();
+}
+
+const videoMetaCache = new WeakMap();
+
+function computeVideoMeta(video) {
+    const titleLower = getTitleText(video);
+    const channelLower = getChannelNameText(video).toLowerCase();
+    const spans = video.querySelectorAll('ytd-video-meta-block #metadata-line span, #video-info span');
+    const viewsSpan = Array.from(spans).find(s => /views?/i.test(s.textContent));
+    const viewsCount = viewsSpan ? parseViewCount(viewsSpan.textContent) : 0;
+    const dateSpan = Array.from(spans).find(s => /(\d{4})|(\d+)\s+years?\s+ago/i.test(s.textContent));
+    let yearStr = '';
+    if (dateSpan) {
+        const m = dateSpan.textContent.trim().match(/(\d{4})|(\d+)\s+years?\s+ago/i);
+        if (m) {
+            const currentYear = new Date().getFullYear();
+            const y = m[1] ? parseInt(m[1]) : currentYear - parseInt(m[2]);
+            yearStr = String(y);
+        }
+    }
+    let durationSec = 0;
+    const overlay = video.querySelector('ytd-thumbnail-overlay-time-status-renderer');
+    if (overlay) {
+        const raw = (overlay.textContent || '').trim();
+        const match = raw.match(/\d{1,2}:\d{2}(?::\d{2})?/);
+        if (match) {
+            durationSec = parseDuration(match[0]);
+        }
+    }
+    return { titleLower, channelLower, viewsCount, yearStr, durationSec };
+}
+
+function getVideoMeta(video) {
+    const current = computeVideoMeta(video);
+    const cached = videoMetaCache.get(video);
+    if (!cached) {
+        videoMetaCache.set(video, current);
+        return current;
+    }
+    const updated = {
+        titleLower: current.titleLower || cached.titleLower,
+        channelLower: current.channelLower || cached.channelLower,
+        viewsCount: current.viewsCount || cached.viewsCount,
+        yearStr: current.yearStr || cached.yearStr,
+        durationSec: current.durationSec || cached.durationSec,
+    };
+    videoMetaCache.set(video, updated);
+    return updated;
+}
 // Function to create search interface element
 function createSearchElement() {
     const searchContainer = document.createElement('div');
@@ -87,7 +152,7 @@ function updatePlayFilteredUrl() {
     if (!playFilteredButton) return;
 
     // Get all visible (matching) videos
-    const visibleVideos = Array.from(document.querySelectorAll('ytd-playlist-video-renderer'))
+    const visibleVideos = Array.from(getVideoItems())
         .filter(video => video.style.display !== 'none');
 
     if (visibleVideos.length > 0) {
@@ -106,8 +171,9 @@ function updatePlayFilteredUrl() {
 
 // Helper function to get video ID from a playlist item
 function getVideoId(videoElement) {
-    const link = videoElement.querySelector('a#thumbnail').href;
-    const match = link.match(/[?&]v=([^&]+)/);
+    const linkEl = videoElement.querySelector('a[href*="watch"], a#thumbnail');
+    const href = linkEl?.href || '';
+    const match = href.match(/[?&]v=([^&]+)/);
     return match ? match[1] : null;
 }
 
@@ -120,12 +186,12 @@ function updateChannelFilter() {
     const currentSelection = channelFilter.value;
 
     // Get all videos
-    const videos = document.querySelectorAll('ytd-playlist-video-renderer');
+    const videos = getVideoItems();
     
     // Get unique channel names
     const channels = new Set();
     videos.forEach(video => {
-        const channelName = video.querySelector('#channel-name a').textContent.trim();
+        const channelName = getChannelNameText(video);
         if (channelName) channels.add(channelName);
     });
 
@@ -160,25 +226,21 @@ function updateYearFilter() {
     const currentSelection = yearFilter.value;
 
     // Get all videos
-    const videos = document.querySelectorAll('ytd-playlist-video-renderer');
+    const videos = getVideoItems();
     
     // Get unique years
     const years = new Set();
     videos.forEach(video => {
-        // Try different selectors for the upload date
-        const dateElement = video.querySelector('ytd-video-meta-block #metadata-line span:last-child, #video-info span:last-child');
-        if (dateElement) {
-            const dateText = dateElement.textContent.trim();
-            // Match year patterns like "X years ago" or "2024" or "Jan 1, 2024"
+        const dateSpans = video.querySelectorAll('ytd-video-meta-block #metadata-line span, #video-info span');
+        Array.from(dateSpans).forEach(span => {
+            const dateText = span.textContent.trim();
             const yearMatch = dateText.match(/(\d{4})|(\d+)\s+years?\s+ago/);
             if (yearMatch) {
                 const currentYear = new Date().getFullYear();
-                const year = yearMatch[1] ? 
-                    parseInt(yearMatch[1]) : // Direct year match
-                    currentYear - parseInt(yearMatch[2]); // "X years ago" format
+                const year = yearMatch[1] ? parseInt(yearMatch[1]) : currentYear - parseInt(yearMatch[2]);
                 years.add(year.toString());
             }
-        }
+        });
     });
 
     // Sort years in descending order (newest first)
@@ -313,8 +375,8 @@ function createChannelSelectionDialog(selectedChannels = []) {
     
     // Get all unique channels from the playlist
     const channels = new Set();
-    document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
-        const channelName = video.querySelector('#channel-name a')?.textContent.trim();
+    getVideoItems().forEach(video => {
+        const channelName = getChannelNameText(video);
         if (channelName) channels.add(channelName);
     });
     
@@ -568,9 +630,9 @@ function switchTab(tabName) {
 
 // Modified videoMatchesSearch function to include group filters
 function videoMatchesSearch(video, searchTerm) {
-    const title = video.querySelector('#video-title')?.textContent.toLowerCase() || '';
-    const channelElement = video.querySelector('#channel-name a');
-    const channelName = channelElement?.textContent.trim() || '';
+    const meta = getVideoMeta(video);
+    const title = meta.titleLower;
+    const channelName = meta.channelLower;
     
     // Check existing filters first
     const selectedChannel = document.querySelector('#channel-filter')?.value || '';
@@ -584,50 +646,18 @@ function videoMatchesSearch(video, searchTerm) {
     }
     
     if (selectedYear) {
-        const dateElement = video.querySelector('ytd-video-meta-block #metadata-line span:last-child, #video-info span:last-child');
-        if (dateElement) {
-            const dateText = dateElement.textContent.trim();
-            const yearMatch = dateText.match(/(\d{4})|(\d+)\s+years?\s+ago/);
-            if (yearMatch) {
-                const currentYear = new Date().getFullYear();
-                const videoYear = yearMatch[1] ? 
-                    parseInt(yearMatch[1]) : // Direct year match
-                    currentYear - parseInt(yearMatch[2]); // "X years ago" format
-                if (videoYear.toString() !== selectedYear) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        if (!meta.yearStr || meta.yearStr !== selectedYear) return false;
     }
     
     if (selectedViews) {
-        const viewsElement = video.querySelector('ytd-video-meta-block #metadata-line span:first-child, #video-info span:first-child');
-        if (viewsElement) {
-            const viewCount = parseViewCount(viewsElement.textContent);
-            const [minViews, maxViews] = selectedViews.split('-').map(v => v === 'up' ? Infinity : parseInt(v));
-            if (viewCount < minViews || viewCount >= maxViews) {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        const [minViews, maxViews] = selectedViews.split('-').map(v => v === 'up' ? Infinity : parseInt(v));
+        if (meta.viewsCount < minViews || meta.viewsCount >= maxViews) return false;
     }
 
     if (selectedDuration) {
-        const timeElement = video.querySelector('#text.ytd-thumbnail-overlay-time-status-renderer');
-        if (timeElement) {
-            const duration = parseDuration(timeElement.textContent.trim());
-            const [minDuration, maxDuration] = selectedDuration.split('-').map(d => d === 'up' ? Infinity : parseInt(d));
-            if (duration < minDuration || duration >= maxDuration) {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        const [minDuration, maxDuration] = selectedDuration.split('-').map(d => d === 'up' ? Infinity : parseInt(d));
+        if (meta.durationSec === 0) return false;
+        if (meta.durationSec < minDuration || meta.durationSec >= maxDuration) return false;
     }
     
     // Apply group filters
@@ -674,9 +704,9 @@ function videoMatchesSearch(video, searchTerm) {
 }
 
 // Function to handle the search
-function handleSearch() {
+async function handleSearch() {
     const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
-    const videoItems = document.querySelectorAll('ytd-playlist-video-renderer');
+    const videoItems = Array.from(getVideoItems());
     const playFilteredButton = document.querySelector('#play-filtered-button');
     const selectedChannel = document.querySelector('#channel-filter')?.value || '';
     const selectedYear = document.querySelector('#year-filter')?.value || '';
@@ -684,19 +714,24 @@ function handleSearch() {
     const selectedDuration = document.querySelector('#duration-filter')?.value || '';
     let matchCount = 0;
 
-    // Check each video
-    videoItems.forEach(item => {
-        try {
-            if (videoMatchesSearch(item, searchTerm)) {
-                item.style.removeProperty('display');
-                matchCount++;
-            } else {
-                item.style.display = 'none';
+    const chunkSize = 100;
+    for (let start = 0; start < videoItems.length; start += chunkSize) {
+        const end = Math.min(start + chunkSize, videoItems.length);
+        for (let i = start; i < end; i++) {
+            const item = videoItems[i];
+            try {
+                if (videoMatchesSearch(item, searchTerm)) {
+                    item.style.removeProperty('display');
+                    matchCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error processing video:', error);
             }
-        } catch (error) {
-            console.error('Error processing video:', error);
         }
-    });
+        await new Promise(resolve => requestAnimationFrame(resolve));
+    }
 
     // Update play filtered button visibility
     if (playFilteredButton) {
@@ -870,14 +905,20 @@ function addSearchEventListeners() {
         });
     }
 
-    // Add filter change handlers with conditional auto-scroll
+    // Add filter change handlers with conditional auto-scroll (throttled)
     [channelFilter, yearFilter, viewsFilter, durationFilter].forEach(filter => {
         if (filter) {
             filter.addEventListener('change', () => {
-                handleSearch();
-                if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
-                    autoScrollAndSearch();
-                }
+                requestAnimationFrame(() => {
+                    handleSearch();
+                    setTimeout(() => {
+                        updateChannelFilter();
+                        updateYearFilter();
+                    }, 50);
+                    if (isAutoScrollEnabled && !autoScrollToggle?.disabled && hasActiveFilters()) {
+                        autoScrollAndSearch();
+                    }
+                });
             });
         }
     });
@@ -902,7 +943,7 @@ function addSearchEventListeners() {
 async function autoScrollAndSearch() {
     const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
     const totalCount = getPlaylistTotalCount();
-    let currentCount = document.querySelectorAll('ytd-playlist-video-renderer').length;
+    let currentCount = getVideoItems().length;
     let noNewVideosCount = 0;
     let lastCount = currentCount;
     let matchCount = 0;
@@ -916,7 +957,7 @@ async function autoScrollAndSearch() {
 
     try {
         // Count current matches
-        document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
+        getVideoItems().forEach(video => {
             if (video.style.display !== 'none') {
                 matchCount++;
             }
@@ -931,7 +972,7 @@ async function autoScrollAndSearch() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Update counts
-            currentCount = document.querySelectorAll('ytd-playlist-video-renderer').length;
+            currentCount = getVideoItems().length;
             
             // Check if we got new videos
             if (currentCount === lastCount) {
@@ -945,7 +986,7 @@ async function autoScrollAndSearch() {
 
                 // Count new matches
                 matchCount = 0;
-                document.querySelectorAll('ytd-playlist-video-renderer').forEach(video => {
+                getVideoItems().forEach(video => {
                     if (video.style.display !== 'none') {
                         matchCount++;
                     }
@@ -965,17 +1006,19 @@ async function autoScrollAndSearch() {
 
 // Function to add scroll event listener
 function addScrollListener() {
-    // Update filters when scrolling stops
-    let scrollTimeout;
+    let scheduled = false;
     window.addEventListener('scroll', () => {
-        if (isPlaylistPage()) {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
+        if (!isPlaylistPage()) return;
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+            handleSearch();
+            setTimeout(() => {
                 updateChannelFilter();
                 updateYearFilter();
-                handleSearch();
-            }, 250);
-        }
+            }, 200);
+            scheduled = false;
+        });
     });
 }
 
@@ -991,22 +1034,37 @@ function init() {
     createSearchInterface();
     
     // Add mutation observer for new videos
-    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
+    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer')
+        || document.querySelector('#contents.ytd-playlist-panel-renderer')
+        || document.querySelector('ytd-playlist-panel-renderer #items');
     if (videosContainer) {
         const observer = new MutationObserver((mutations) => {
-            let needsUpdate = false;
-            
+            const newVideos = [];
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                     mutation.addedNodes.forEach(node => {
-                        if (node.tagName === 'YTD-PLAYLIST-VIDEO-RENDERER') {
-                            needsUpdate = true;
+                        const tag = node.tagName;
+                        if (tag === 'YTD-PLAYLIST-VIDEO-RENDERER' || tag === 'YTD-PLAYLIST-PANEL-VIDEO-RENDERER') {
+                            newVideos.push(node);
                         }
                     });
                 }
             });
 
-            if (needsUpdate) {
+            if (newVideos.length) {
+                const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
+                newVideos.forEach(item => {
+                    try {
+                        getVideoMeta(item);
+                        if (videoMatchesSearch(item, searchTerm)) {
+                            item.style.removeProperty('display');
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    } catch (error) {
+                        console.error('Error processing new video:', error);
+                    }
+                });
                 updateChannelFilter();
                 updateYearFilter();
                 handleSearch();
@@ -1027,8 +1085,11 @@ function checkAndInitialize() {
 
     // Check if the search interface exists and is properly placed
     const searchContainer = document.querySelector('#playlist-search-container');
-    const playlistContent = document.querySelector('ytd-playlist-video-list-renderer');
-    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
+    const playlistContent = document.querySelector('ytd-playlist-video-list-renderer')
+        || document.querySelector('ytd-playlist-panel-renderer');
+    const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer')
+        || document.querySelector('#contents.ytd-playlist-panel-renderer')
+        || document.querySelector('ytd-playlist-panel-renderer #items');
 
     // If we're missing any required elements, try to initialize
     if (!searchContainer || !playlistContent || !videosContainer) {
@@ -1084,7 +1145,9 @@ new MutationObserver(() => {
 
 // Function to get total playlist count
 function getPlaylistTotalCount() {
-    const countText = document.querySelector('ytd-playlist-sidebar-primary-info-renderer #stats .byline-item:first-child')?.textContent;
+    const countText = document.querySelector('ytd-playlist-sidebar-primary-info-renderer #stats .byline-item:first-child')?.textContent
+        || document.querySelector('ytd-playlist-header-renderer #stats .byline-item:first-child')?.textContent
+        || document.querySelector('#stats.ytd-playlist-sidebar-primary-info-renderer .byline-item')?.textContent;
     if (countText) {
         const match = countText.match(/\d+/);
         return match ? parseInt(match[0]) : null;
@@ -1102,8 +1165,11 @@ function createSearchInterface() {
     // Wait for the playlist content to be loaded
     const checkForPlaylistContent = setInterval(() => {
         // Try to find the playlist content area and the videos container
-        const playlistContent = document.querySelector('ytd-playlist-video-list-renderer');
-        const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer');
+        const playlistContent = document.querySelector('ytd-playlist-video-list-renderer')
+            || document.querySelector('ytd-playlist-panel-renderer');
+        const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer')
+            || document.querySelector('#contents.ytd-playlist-panel-renderer')
+            || document.querySelector('ytd-playlist-panel-renderer #items');
         
         // Only proceed if we have both elements and no existing search container
         if (playlistContent && videosContainer && !document.querySelector('#playlist-search-container')) {
@@ -1157,7 +1223,7 @@ function clearSearch() {
     if (searchChannel) searchChannel.checked = true;
     
     // Show all videos
-    const videoItems = document.querySelectorAll('ytd-playlist-video-renderer');
+    const videoItems = getVideoItems();
     videoItems.forEach(item => {
         item.style.display = '';
     });
