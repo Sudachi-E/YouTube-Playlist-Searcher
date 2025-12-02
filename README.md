@@ -1,6 +1,6 @@
 # YouTube Playlist Search Extension
 
-A powerful Chrome extension that enhances YouTube playlists with advanced search, filtering, and organization capabilities. Perfect for managing and navigating large playlists efficiently.
+A powerful Chrome/Firefox/Edge extension that enhances YouTube playlists with advanced search, filtering, and organization capabilities. Perfect for managing and navigating large playlists efficiently.
 
 ## Features
 
