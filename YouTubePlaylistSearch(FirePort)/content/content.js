@@ -1,3 +1,96 @@
+// YouTube theme detection
+function detectYouTubeTheme() {
+    // Check for dark theme indicators
+    const html = document.documentElement;
+    const body = document.body;
+    
+    // Method 1: Check for dark attribute on html element
+    if (html.hasAttribute('dark') || html.getAttribute('dark') === '' || html.getAttribute('dark') === 'true') {
+        return 'dark';
+    }
+    
+    // Method 2: Check for dark theme class on body
+    if (body.classList.contains('dark-theme') || body.classList.contains('dark')) {
+        return 'dark';
+    }
+    
+    // Method 3: Check computed background color of YouTube's main content
+    const ytdApp = document.querySelector('ytd-app');
+    if (ytdApp) {
+        const computedStyle = window.getComputedStyle(ytdApp);
+        const bgColor = computedStyle.backgroundColor;
+        // If background is dark (RGB values are low), it's dark theme
+        const rgb = bgColor.match(/\d+/g);
+        if (rgb && rgb.length >= 3) {
+            const r = parseInt(rgb[0]);
+            const g = parseInt(rgb[1]);
+            const b = parseInt(rgb[2]);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            if (brightness < 128) {
+                return 'dark';
+            }
+        }
+    }
+    
+    return 'light';
+}
+
+function applyThemeToExtension(theme) {
+    const container = document.querySelector('#playlist-search-container');
+    const modal = document.querySelector('#group-filters-modal');
+    const channelDialog = document.querySelector('.channel-selection-dialog');
+    
+    console.log('Applying theme:', theme); // Debug log
+    
+    if (container) {
+        container.setAttribute('data-theme', theme);
+        console.log('Applied theme to container:', container); // Debug log
+    }
+    if (modal) {
+        modal.setAttribute('data-theme', theme);
+        console.log('Applied theme to modal:', modal); // Debug log
+    } else {
+        console.log('Modal not found when applying theme'); // Debug log
+    }
+    if (channelDialog) {
+        channelDialog.setAttribute('data-theme', theme);
+        console.log('Applied theme to channel dialog:', channelDialog); // Debug log
+    }
+}
+
+function initThemeDetection() {
+    // Initial theme detection
+    const currentTheme = detectYouTubeTheme();
+    applyThemeToExtension(currentTheme);
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+        let themeChanged = false;
+        
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && 
+                (mutation.attributeName === 'dark' || mutation.attributeName === 'class')) {
+                themeChanged = true;
+            }
+        });
+        
+        if (themeChanged) {
+            const newTheme = detectYouTubeTheme();
+            applyThemeToExtension(newTheme);
+        }
+    });
+    
+    // Observe changes to html and body elements
+    observer.observe(document.documentElement, { 
+        attributes: true, 
+        attributeFilter: ['dark', 'class'] 
+    });
+    observer.observe(document.body, { 
+        attributes: true, 
+        attributeFilter: ['class'] 
+    });
+}
+
 // Function to check if we're on a playlist page
 function isPlaylistPage() {
     return window.location.href.includes('/playlist?list=');
@@ -143,6 +236,11 @@ function createSearchElement() {
             </div>
         </div>
     `;
+    
+    // Apply current theme to the container
+    const currentTheme = detectYouTubeTheme();
+    searchContainer.setAttribute('data-theme', currentTheme);
+    
     return searchContainer;
 }
 
@@ -407,6 +505,11 @@ function createChannelSelectionDialog(selectedChannels = []) {
         </div>
     `;
     
+    // Apply current theme to the dialog
+    const currentTheme = detectYouTubeTheme();
+    dialog.setAttribute('data-theme', currentTheme);
+    console.log('Applied theme to channel selection dialog:', currentTheme); // Debug log
+    
     document.body.appendChild(dialog);
     
     // Add search functionality
@@ -594,6 +697,12 @@ function showGroupFiltersModal() {
     const modal = document.querySelector('#group-filters-modal');
     if (modal) {
         modal.style.display = 'block';
+        
+        // Apply current theme to modal when showing it
+        const currentTheme = detectYouTubeTheme();
+        modal.setAttribute('data-theme', currentTheme);
+        console.log('Applied theme to modal on show:', currentTheme); // Debug log
+        
         // Ensure the first tab is visible and active by default
         const firstTab = document.querySelector('.tab-button');
         const firstTabContent = document.querySelector('.tab-content');
@@ -1110,6 +1219,9 @@ function checkAndInitialize() {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme detection
+    initThemeDetection();
+    
     // Initial check
     checkAndInitialize();
 
