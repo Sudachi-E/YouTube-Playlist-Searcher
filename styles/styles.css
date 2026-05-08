@@ -28,13 +28,13 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 /* Theme-specific styling for main container */
 #playlist-search-container[data-theme="light"] {
-    background: var(--yt-spec-brand-background-primary, white);
-    border: 1px solid var(--yt-spec-text-secondary, #cccccc);
+    background: white;
+    border: 1px solid #cccccc;
 }
 
 #playlist-search-container[data-theme="dark"] {
-    background: var(--yt-spec-brand-background-primary, #212121);
-    border: 1px solid var(--yt-spec-text-secondary, #3c3c3c);
+    background: #212121;
+    border: 1px solid #3c3c3c;
 }
 
 .search-box {
@@ -147,7 +147,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 #play-filtered-button {
     background: var(--yt-spec-static-brand-red, #ff0000);
-    color: var(--yt-spec-static-brand-white);
+    color: white;
 }
 
 #clear-search-button:hover {
@@ -157,7 +157,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 #play-filtered-button:hover {
     background: var(--yt-spec-static-brand-red-hover, #cc0000);
     text-decoration: none;
-    color: var(--yt-spec-static-brand-white);
+    color: white;
 }
 
 #search-results-count {
@@ -263,84 +263,82 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 }
 
 .modal[data-theme="dark"] .modal-content {
-    background-color: var(--yt-spec-brand-background-primary, #212121) !important;
+    background-color: #212121 !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .modal[data-theme="light"] .modal-header h2 {
-    color: var(--yt-spec-text-primary, black) !important;
+    color: black !important;
 }
 
 .modal[data-theme="dark"] .modal-header h2 {
-    color: var(--yt-spec-text-primary, white) !important;
+    color: white !important;
 }
 
 .modal[data-theme="light"] .close-button {
-    color: var(--yt-spec-text-secondary, #666666) !important;
+    color: #666666 !important;
 }
 
 .modal[data-theme="dark"] .close-button {
-    color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+    color: #aaaaaa !important;
 }
 
 .modal[data-theme="light"] .modal-tabs {
-    border-bottom: 1px solid var(--yt-spec-text-secondary, #cccccc) !important;
+    border-bottom: 1px solid #cccccc !important;
 }
 
 .modal[data-theme="dark"] .modal-tabs {
-    border-bottom: 1px solid var(--yt-spec-text-secondary, #3c3c3c) !important;
+    border-bottom: 1px solid #3c3c3c !important;
 }
 
-
-
 .modal[data-theme="light"] .filter-group {
-    background: var(--yt-spec-badge-chip-background, #f2f2f2) !important;
+    background: #f2f2f2 !important;
 }
 
 .modal[data-theme="dark"] .filter-group {
-    background: var(--yt-spec-badge-chip-background, #3c3c3c) !important;
+    background: #3c3c3c !important;
 }
 
 .modal[data-theme="light"] .filter-group-name {
-    color: var(--yt-spec-text-primary, black) !important;
+    color: black !important;
 }
 
 .modal[data-theme="dark"] .filter-group-name {
-    color: var(--yt-spec-text-primary, white) !important;
+    color: white !important;
 }
 
 .modal[data-theme="light"] .filter-item {
-    background: var(--yt-spec-brand-background-primary, white) !important;
-    border: 1px solid var(--yt-spec-text-secondary, #cccccc) !important;
-    color: var(--yt-spec-text-primary, black) !important;
+    background: white !important;
+    border: 1px solid #cccccc !important;
+    color: black !important;
 }
 
 .modal[data-theme="dark"] .filter-item {
-    background: var(--yt-spec-brand-background-primary, #212121) !important;
-    border: 1px solid var(--yt-spec-text-secondary, #3c3c3c) !important;
-    color: var(--yt-spec-text-primary, white) !important;
+    background: #212121 !important;
+    border: 1px solid #3c3c3c !important;
+    color: white !important;
 }
 
 .modal[data-theme="light"] .toggle-group-button,
 .modal[data-theme="light"] .edit-group-button,
 .modal[data-theme="light"] .delete-group-button {
-    background: var(--yt-spec-badge-chip-background, #f2f2f2) !important;
-    color: var(--yt-spec-text-secondary, #666666) !important;
+    background: #f2f2f2 !important;
+    color: #666666 !important;
 }
 
 .modal[data-theme="dark"] .toggle-group-button,
 .modal[data-theme="dark"] .edit-group-button,
 .modal[data-theme="dark"] .delete-group-button {
-    background: var(--yt-spec-badge-chip-background, #3c3c3c) !important;
-    color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+    background: #3c3c3c !important;
+    color: #aaaaaa !important;
 }
 
 .modal[data-theme="light"] .filter-group:hover {
-    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5) !important;
+    background: #e5e5e5 !important;
 }
 
 .modal[data-theme="dark"] .filter-group:hover {
-    background: var(--yt-spec-badge-chip-background-hover, #4a4a4a) !important;
+    background: #4a4a4a !important;
 }
 
 .modal-header {
@@ -352,7 +350,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 .modal-header h2 {
     margin: 0;
-    color: var(--yt-spec-text-primary, black);
+    color: var(--yt-spec-text-primary, inherit);
     font-size: 20px;
 }
 
@@ -361,7 +359,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: var(--yt-spec-text-secondary, #666666);
+    color: var(--yt-spec-text-secondary, inherit);
     padding: 0;
     line-height: 1;
 }
@@ -400,36 +398,36 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 /* Theme-specific styling for tab buttons */
 .modal[data-theme="light"] .tab-button {
-    color: var(--yt-spec-text-secondary, #666666) !important;
+    color: #666666 !important;
 }
 
 .modal[data-theme="light"] .tab-button:hover {
-    background: var(--yt-spec-badge-chip-background-hover, #e5e5e5) !important;
+    background: #e5e5e5 !important;
 }
 
 .modal[data-theme="dark"] .tab-button {
-    color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+    color: #aaaaaa !important;
 }
 
 .modal[data-theme="dark"] .tab-button:hover {
-    background: var(--yt-spec-badge-chip-background-hover, #4a4a4a) !important;
+    background: #4a4a4a !important;
 }
 
 /* Theme-specific styling for active tab buttons */
 .modal[data-theme="light"] .tab-button.active {
-    background: var(--yt-spec-brand-button-background, #065fd4) !important;
-    color: var(--yt-spec-static-brand-white, white) !important;
+    background: #065fd4 !important;
+    color: white !important;
 }
 
 .modal[data-theme="dark"] .tab-button.active {
-    background: var(--yt-spec-brand-button-background, #065fd4) !important;
-    color: var(--yt-spec-static-brand-white, white) !important;
+    background: #065fd4 !important;
+    color: white !important;
 }
 
 .modal[data-theme="light"] .tab-button.active:hover,
 .modal[data-theme="dark"] .tab-button.active:hover {
-    background: var(--yt-spec-brand-button-background-hover, #0553c2) !important;
-    color: var(--yt-spec-static-brand-white, white) !important;
+    background: #0553c2 !important;
+    color: white !important;
 }
 
 .tab-content {
@@ -463,7 +461,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 .filter-group-name {
     font-weight: 600;
     font-size: 16px;
-    color: var(--yt-spec-text-primary, black);
+    color: var(--yt-spec-text-primary, inherit);
 }
 
 .filter-group-actions {
@@ -483,7 +481,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     border-radius: 16px;
     padding: 4px 12px;
     font-size: 13px;
-    color: var(--yt-spec-text-primary, black);
+    color: var(--yt-spec-text-primary, inherit);
     user-select: none;
 }
 
@@ -600,69 +598,69 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 /* Theme-specific styling for channel selection dialog */
 .channel-selection-dialog[data-theme="light"] .channel-selection-content {
-    background: var(--yt-spec-brand-background-primary, white) !important;
+    background: white !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-selection-content {
-    background: var(--yt-spec-brand-background-primary, #212121) !important;
+    background: #212121 !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .channel-selection-dialog[data-theme="light"] .channel-selection-header h3 {
-    color: var(--yt-spec-text-primary, black) !important;
+    color: black !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-selection-header h3 {
-    color: var(--yt-spec-text-primary, white) !important;
+    color: white !important;
 }
 
 .channel-selection-dialog[data-theme="light"] .close-dialog-button {
-    color: var(--yt-spec-text-secondary, #666666) !important;
+    color: #666666 !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .close-dialog-button {
-    color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+    color: #aaaaaa !important;
 }
 
 .channel-selection-dialog[data-theme="light"] .channel-search-input {
-    background: var(--yt-spec-brand-background-primary, white) !important;
-    color: var(--yt-spec-text-primary, black) !important;
-    border: 1px solid var(--yt-spec-text-secondary, #cccccc) !important;
+    background: white !important;
+    color: black !important;
+    border: 1px solid #cccccc !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-search-input {
-    background: var(--yt-spec-brand-background-primary, #212121) !important;
-    color: var(--yt-spec-text-primary, white) !important;
-    border: 1px solid var(--yt-spec-text-secondary, #3c3c3c) !important;
+    background: #212121 !important;
+    color: white !important;
+    border: 1px solid #3c3c3c !important;
 }
 
 .channel-selection-dialog[data-theme="light"] .channel-option span {
-    color: var(--yt-spec-text-primary, black) !important;
+    color: black !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-option span {
-    color: var(--yt-spec-text-primary, white) !important;
+    color: white !important;
 }
 
 .channel-selection-dialog[data-theme="light"] .channel-option:hover {
-    background: var(--yt-spec-badge-chip-background, #f2f2f2) !important;
+    background: #f2f2f2 !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-option:hover {
-    background: var(--yt-spec-badge-chip-background, #3c3c3c) !important;
+    background: #3c3c3c !important;
 }
 
 .channel-selection-dialog[data-theme="light"] .channel-selection-header,
 .channel-selection-dialog[data-theme="light"] .channel-selection-search,
 .channel-selection-dialog[data-theme="light"] .channel-selection-actions {
-    border-color: var(--yt-spec-text-secondary, #cccccc) !important;
+    border-color: #cccccc !important;
 }
 
 .channel-selection-dialog[data-theme="dark"] .channel-selection-header,
 .channel-selection-dialog[data-theme="dark"] .channel-selection-search,
 .channel-selection-dialog[data-theme="dark"] .channel-selection-actions {
-    border-color: var(--yt-spec-text-secondary, #3c3c3c) !important;
+    border-color: #3c3c3c !important;
 }
 
 .channel-selection-header {
@@ -834,4 +832,70 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 .cancel-selection-button:hover {
     background: var(--yt-spec-badge-chip-background-hover);
+}
+
+/* Dark theme overrides for main UI elements */
+#playlist-search-container[data-theme="dark"] #playlist-search-input,
+#playlist-search-container[data-theme="dark"] #channel-filter,
+#playlist-search-container[data-theme="dark"] #year-filter,
+#playlist-search-container[data-theme="dark"] #views-filter,
+#playlist-search-container[data-theme="dark"] #duration-filter {
+    background: #212121 !important;
+    color: white !important;
+    border-color: #3c3c3c !important;
+}
+
+#playlist-search-container[data-theme="dark"] .search-options {
+    color: white !important;
+}
+
+#playlist-search-container[data-theme="dark"] #search-results-count {
+    color: #aaaaaa !important;
+}
+
+#playlist-search-container[data-theme="dark"] #clear-search-button,
+#playlist-search-container[data-theme="dark"] #auto-scroll-toggle,
+#playlist-search-container[data-theme="dark"] #group-filters-button {
+    background: #3c3c3c !important;
+    color: white !important;
+}
+
+#playlist-search-container[data-theme="dark"] #play-filtered-button {
+    color: white !important;
+}
+
+#playlist-search-container[data-theme="dark"] #play-filtered-button:hover {
+    color: white !important;
+}
+
+/* Dark mode fallback for all text elements */
+@media (prefers-color-scheme: dark) {
+    .modal-header h2,
+    .filter-group-name,
+    .filter-item,
+    .channel-selection-header h3,
+    .channel-option span,
+    .tab-button,
+    .cancel-selection-button {
+        color: white;
+    }
+
+    .close-button,
+    .close-dialog-button {
+        color: #aaaaaa;
+    }
+
+    .filter-item {
+        background: #212121;
+        border-color: #3c3c3c;
+    }
+
+    .filter-group {
+        background: #3c3c3c;
+    }
+
+    .modal-content,
+    .channel-selection-content {
+        background-color: #212121;
+    }
 }
