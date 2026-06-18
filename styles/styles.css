@@ -1,3 +1,10 @@
+/* Hide videos that don't match search - prevents flash of non-matching videos */
+[data-searching="true"] yt-lockup-view-model:not([data-match="true"]),
+[data-searching="true"] ytd-playlist-video-renderer:not([data-match="true"]),
+[data-searching="true"] ytd-playlist-panel-video-renderer:not([data-match="true"]) {
+    display: none !important;
+}
+
 #playlist-search-wrapper {
     padding: 0 0 16px 0;
     width: 100%;
@@ -817,21 +824,21 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 }
 
 .confirm-selection-button {
-    background: var(--yt-spec-brand-button-background);
-    color: var(--yt-spec-static-brand-white);
+    background: #f1f1f1;
+    color: #0f0f0f;
 }
 
 .confirm-selection-button:hover {
-    background: var(--yt-spec-brand-button-background-hover);
+    background: #e5e5e5;
 }
 
 .cancel-selection-button {
-    background: var(--yt-spec-badge-chip-background);
-    color: var(--yt-spec-text-primary);
+    background: #f1f1f1;
+    color: #0f0f0f;
 }
 
 .cancel-selection-button:hover {
-    background: var(--yt-spec-badge-chip-background-hover);
+    background: #e5e5e5;
 }
 
 /* Dark theme overrides for main UI elements */
@@ -843,6 +850,17 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     background: #212121 !important;
     color: white !important;
     border-color: #3c3c3c !important;
+}
+
+#playlist-search-container[data-theme="dark"] .confirm-selection-button,
+#playlist-search-container[data-theme="dark"] .cancel-selection-button {
+    background: #fff !important;
+    color: black !important;
+}
+
+#playlist-search-container[data-theme="dark"] .confirm-selection-button:hover,
+#playlist-search-container[data-theme="dark"] .cancel-selection-button:hover {
+    background: #e5e5e5 !important;
 }
 
 #playlist-search-container[data-theme="dark"] .search-options {
@@ -875,8 +893,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     .filter-item,
     .channel-selection-header h3,
     .channel-option span,
-    .tab-button,
-    .cancel-selection-button {
+    .tab-button {
         color: white;
     }
 

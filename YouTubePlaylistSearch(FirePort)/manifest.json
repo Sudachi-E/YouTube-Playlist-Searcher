@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "YouTube Playlist Search",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Goodbye to manually searching through multiple videos in a large playlist",
   "permissions": [
     "activeTab",

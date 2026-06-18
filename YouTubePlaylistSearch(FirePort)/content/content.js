@@ -1276,12 +1276,39 @@ function createSearchInterface() {
 
     // Wait for the playlist content to be loaded
     const checkForPlaylistContent = setInterval(() => {
-        // Try to find the playlist content area and the videos container
-        const playlistContent = document.querySelector('ytd-playlist-video-list-renderer')
-            || document.querySelector('ytd-playlist-panel-renderer');
-        const videosContainer = document.querySelector('#contents.ytd-playlist-video-list-renderer')
-            || document.querySelector('#contents.ytd-playlist-panel-renderer')
-            || document.querySelector('ytd-playlist-panel-renderer #items');
+        // First, check if we have any video items at all
+        const videoItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+        
+        if (videoItems.length === 0) {
+            return;
+        }
+        
+        // Find the first video that has actual content (title element)
+        const firstRealVideo = Array.from(videoItems).find(v => {
+            return v.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle');
+        });
+        
+        if (!firstRealVideo) {
+            return;
+        }
+        
+        // Find the container that holds the videos
+        let videosContainer = firstRealVideo.parentElement;
+        let playlistContent = videosContainer;
+        
+        // Try to find a good insertion point - look for a container with an ID
+        let currentElement = videosContainer;
+        for (let i = 0; i < 5; i++) {
+            if (currentElement.id || currentElement.tagName.startsWith('YTD-')) {
+                playlistContent = currentElement;
+                break;
+            }
+            if (currentElement.parentElement) {
+                currentElement = currentElement.parentElement;
+            } else {
+                break;
+            }
+        }
         
         // Only proceed if we have both elements and no existing search container
         if (playlistContent && videosContainer && !document.querySelector('#playlist-search-container')) {
@@ -1298,9 +1325,92 @@ function createSearchInterface() {
             wrapper.id = 'playlist-search-wrapper';
             wrapper.appendChild(searchContainer);
             
-            // Insert before the videos container
-            playlistContent.insertBefore(wrapper, videosContainer);
+            // Strategy 1: If videosContainer is a DIRECT child of playlistContent, insert before it
+            if (videosContainer.parentNode === playlistContent) {
+                playlistContent.insertBefore(wrapper, videosContainer);
+            } 
+            // Strategy 2: If they're the same element, prepend to it
+            else if (videosContainer === playlistContent) {
+                if (playlistContent.firstChild) {
+                    playlistContent.insertBefore(wrapper, playlistContent.firstChild);
+                } else {
+                    playlistContent.appendChild(wrapper);
+                }
+            }
+            // Strategy 3: Find a suitable parent
+            else {
+                // Find the lowest common ancestor
+                let parent = videosContainer.parentElement;
+                let insertionPoint = videosContainer;
+                while (parent && parent !== playlistContent && parent.parentElement) {
+                    if (parent.parentElement === playlistContent || parent.id || parent.tagName.startsWith('YTD-')) {
+                        break;
+                    }
+                    insertionPoint = parent;
+                    parent = parent.parentElement;
+                }
+                
+                if (parent && insertionPoint.parentElement) {
+                    insertionPoint.parentElement.insertBefore(wrapper, insertionPoint);
+                } else {
+                    if (playlistContent.firstChild) {
+                        playlistContent.insertBefore(wrapper, playlistContent.firstChild);
+                    } else {
+                        playlistContent.appendChild(wrapper);
+                    }
+                }
+            }
+
             addSearchEventListeners();
+            
+            // Observe this container for lazily loaded videos
+            const newVideoObserver = new MutationObserver((mutations) => {
+                const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
+                const hasFilters = searchTerm || document.querySelector('#channel-filter')?.value
+                    || document.querySelector('#year-filter')?.value
+                    || document.querySelector('#views-filter')?.value
+                    || document.querySelector('#duration-filter')?.value
+                    || hasActiveFilters();
+
+                if (!hasFilters) return;
+
+                const videoSelector = 'yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer';
+                const processed = new Set();
+
+                function processVideo(videoEl) {
+                    if (processed.has(videoEl)) return;
+                    processed.add(videoEl);
+                    videoEl.style.setProperty('display', 'none', 'important');
+                    if (videoMatchesSearch(videoEl, searchTerm)) {
+                        videoEl.setAttribute('data-match', 'true');
+                        videoEl.style.removeProperty('display');
+                    } else {
+                        videoEl.setAttribute('data-match', 'false');
+                    }
+                }
+
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType !== 1) return;
+                            // Check the node itself
+                            if (node.matches(videoSelector)) {
+                                processVideo(node);
+                            }
+                            // Also check descendants (YouTube may add containers with videos inside)
+                            node.querySelectorAll(videoSelector).forEach(processVideo);
+                        });
+                    }
+                });
+
+                // Ensure data-searching persists in case YouTube replaced the container
+                if (processed.size > 0 && !document.body.hasAttribute('data-searching')) {
+                    document.body.setAttribute('data-searching', 'true');
+                }
+            });
+
+            // Observe document.body so we catch videos even if YouTube replaces the playlist container
+            newVideoObserver.observe(document.body, { childList: true, subtree: true });
             
             // Update filters after a short delay to ensure videos are loaded
             setTimeout(() => {
@@ -1310,8 +1420,8 @@ function createSearchInterface() {
         }
     }, 500); // Check every 500ms
 
-    // Clear interval after 10 seconds to prevent infinite checking
-    setTimeout(() => clearInterval(checkForPlaylistContent), 10000);
+    // Clear interval after 30 seconds to prevent infinite checking
+    setTimeout(() => clearInterval(checkForPlaylistContent), 30000);
 }
 
 // Function to clear all search filters
