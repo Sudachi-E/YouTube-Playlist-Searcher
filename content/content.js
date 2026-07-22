@@ -1,4 +1,9 @@
-// YouTube theme detection
+function isMainYouTubeHost() {
+    return location.hostname === 'www.youtube.com';
+}
+
+if (isMainYouTubeHost()) {
+    // YouTube theme detection
 function detectYouTubeTheme() {
     // Check for dark theme indicators
     const html = document.documentElement;
@@ -1584,4 +1589,5 @@ function addGroupFilterEventListeners() {
             showAddGroupDialog(type);
         });
     });
-} 
+}
+}

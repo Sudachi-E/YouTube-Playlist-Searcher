@@ -5,11 +5,11 @@
   "description": "Goodbye to manually searching through multiple videos in a large playlist",
   "permissions": [
     "activeTab",
-    "*://*.youtube.com/*"
+    "https://www.youtube.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*"],
+      "matches": ["https://www.youtube.com/*"],
       "js": ["content/content.js"],
       "css": ["styles/styles.css"]
     }
