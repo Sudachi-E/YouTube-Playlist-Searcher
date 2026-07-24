@@ -49,9 +49,6 @@ A powerful [**Chrome**](https://chromewebstore.google.com/detail/youtube-playlis
 - "Play Filtered" for matching videos
 - Creates temporary filtered playlist
 
-## Installation
-Navigate to the extension store for Chrome/Firefox/Edge to install the extension
-
 ## Usage
 
 ### Basic Search
