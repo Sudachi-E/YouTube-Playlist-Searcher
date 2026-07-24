@@ -1,25 +1,145 @@
 function isMainYouTubeHost() {
-    return location.hostname === 'www.youtube.com';
+    return location.hostname === 'www.youtube.com'
 }
 
 if (isMainYouTubeHost()) {
-    // YouTube theme detection
+
+(function setupDiagnostics() {
+    function waitForBody(fn) {
+        if (document.body) return fn();
+        const mo = new MutationObserver(() => { if (document.body) { mo.disconnect(); fn(); } });
+        mo.observe(document.documentElement, { childList: true });
+    }
+    waitForBody(() => {
+        // Track data-searching changes
+        new MutationObserver((muts) => {
+            for (const m of muts) {
+                if (m.attributeName === 'data-searching') {
+                    console.log('[YPS-DIAG] body[data-searching] changed', {
+                        value: document.body.getAttribute('data-searching'),
+                        stack: new Error().stack.split('\n').slice(1, 6).join(' | '),
+                    });
+                }
+            }
+        }).observe(document.body, { attributes: true, attributeFilter: ['data-searching'] });
+
+        // Track video attr changes: style, data-match, AND class (YouTube likely uses classes to hide)
+        const videoSel = 'yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer';
+        new MutationObserver((muts) => {
+            for (const m of muts) {
+                const t = m.target;
+                if (!t.matches?.(videoSel)) continue;
+                if (m.type === 'attributes') {
+                    console.log('[YPS-DIAG] video attr', {
+                        attr: m.attributeName,
+                        display: t.style.display || '(none)',
+                        class: t.className?.toString().slice(0, 80) || '',
+                        dataMatch: t.getAttribute('data-match'),
+                        title: (t.querySelector('#video-title, a#video-title, .ytLockupMetadataViewModelTitle')?.textContent || '').slice(0, 50),
+                        stack: new Error().stack.split('\n').slice(1, 4).join(' | '),
+                    });
+                }
+            }
+        }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style', 'data-match', 'class'] });
+
+        // Track video removals from DOM
+        new MutationObserver((muts) => {
+            for (const m of muts) {
+                if (m.type !== 'childList') continue;
+                for (const removed of m.removedNodes) {
+                    if (removed.nodeType !== 1) continue;
+                    if (removed.matches?.(videoSel)) {
+                        console.log('[YPS-DIAG] video REMOVED from DOM', {
+                            title: (removed.querySelector('#video-title, a#video-title, .ytLockupMetadataViewModelTitle')?.textContent || '').slice(0, 50),
+                            parent: removed.parentElement?.tagName || '(detached)',
+                            stack: new Error().stack.split('\n').slice(1, 4).join(' | '),
+                        });
+                    }
+                }
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+
+        console.log('[YPS-DIAG] diagnostic observers installed');
+
+        // Catches pre-existing hidden state
+        let lastTotal = 0;
+        setInterval(() => {
+            const sel = 'yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer';
+            const videos = document.querySelectorAll(sel);
+            if (videos.length === 0) return;
+            const searchData = document.body.getAttribute('data-searching');
+            let hiddenByStyle = 0, hiddenByCSSTop = 0, hiddenByCSSParent = 0, visible = 0, noMatchAttr = 0;
+            videos.forEach(v => {
+                const cs = getComputedStyle(v);
+                const dm = v.getAttribute('data-match');
+                const styleHidden = v.style.display === 'none';
+                if (!dm) noMatchAttr++;
+                if (styleHidden) hiddenByStyle++;
+                else if (cs.display === 'none') hiddenByCSSTop++;
+                else {
+                    // Check if any ancestor hides it
+                    let p = v.parentElement, ancestorHidden = false;
+                    while (p && p !== document.body) {
+                        if (getComputedStyle(p).display === 'none') {
+                            ancestorHidden = true;
+                            // Log first 3 unique hiding ancestors
+                            if (hiddenByCSSParent < 3) {
+                                console.log('[YPS-DIAG] hiding ancestor', {
+                                    tag: p.tagName,
+                                    id: p.id || '',
+                                    class: p.className?.toString().slice(0, 80) || '',
+                                    parentTag: p.parentElement?.tagName || '',
+                                });
+                            }
+                            break;
+                        }
+                        p = p.parentElement;
+                    }
+                    if (ancestorHidden) hiddenByCSSParent++;
+                    else visible++;
+                }
+            });
+            if (videos.length !== lastTotal) {
+                console.log('[YPS-DIAG] video count changed', { from: lastTotal, to: videos.length });
+                lastTotal = videos.length;
+            }
+            console.log('[YPS-DIAG] video state', {
+                total: videos.length,
+                visible,
+                hiddenByStyle,
+                hiddenByCSSTop,
+                hiddenByCSSParent,
+                noMatchAttr,
+                dataSearching: searchData,
+                hasContainer: Boolean(document.querySelector('#playlist-search-container')),
+                hasWrapper: Boolean(document.querySelector('#playlist-search-wrapper')),
+                browseCount: document.querySelectorAll('ytd-browse').length,
+                browseDetails: Array.from(document.querySelectorAll('ytd-browse')).map((b, i) => ({
+                    i,
+                    display: getComputedStyle(b).display,
+                    subtype: b.getAttribute('page-subtype') || '',
+                    videoCount: b.querySelectorAll(sel).length,
+                })),
+            });
+        }, 2000);
+    });
+})();
+
 function detectYouTubeTheme() {
-    // Check for dark theme indicators
     const html = document.documentElement;
     const body = document.body;
     
-    // Method 1: Check for dark attribute on html element
+    // Check for dark attribute on html element
     if (html.hasAttribute('dark') || html.getAttribute('dark') === '' || html.getAttribute('dark') === 'true') {
         return 'dark';
     }
     
-    // Method 2: Check for dark theme class on body
+    // Check for dark theme class on body
     if (body.classList.contains('dark-theme') || body.classList.contains('dark')) {
         return 'dark';
     }
     
-    // Method 3: Check computed background color of YouTube's main content
+    // Check computed background color of YouTube's main content
     const ytdApp = document.querySelector('ytd-app');
     if (ytdApp) {
         const computedStyle = window.getComputedStyle(ytdApp);
@@ -45,21 +165,21 @@ function applyThemeToExtension(theme) {
     const modal = document.querySelector('#group-filters-modal');
     const channelDialog = document.querySelector('.channel-selection-dialog');
     
-    console.log('Applying theme:', theme); // Debug log
+    console.log('Applying theme:', theme);
     
     if (container) {
         container.setAttribute('data-theme', theme);
-        console.log('Applied theme to container:', container); // Debug log
+        console.log('Applied theme to container:', container);
     }
     if (modal) {
         modal.setAttribute('data-theme', theme);
-        console.log('Applied theme to modal:', modal); // Debug log
+        console.log('Applied theme to modal:', modal);
     } else {
-        console.log('Modal not found when applying theme'); // Debug log
+        console.log('Modal not found when applying theme');
     }
     if (channelDialog) {
         channelDialog.setAttribute('data-theme', theme);
-        console.log('Applied theme to channel dialog:', channelDialog); // Debug log
+        console.log('Applied theme to channel dialog:', channelDialog);
     }
 }
 
@@ -68,7 +188,7 @@ function initThemeDetection() {
     const currentTheme = detectYouTubeTheme();
     applyThemeToExtension(currentTheme);
     
-    // Watch for theme changes
+    // Watches for theme changes
     const observer = new MutationObserver((mutations) => {
         let themeChanged = false;
         
@@ -98,11 +218,87 @@ function initThemeDetection() {
 
 // Function to check if we're on a playlist page
 function isPlaylistPage() {
-    return window.location.href.includes('/playlist?list=');
+    try {
+        const url = new URL(window.location.href);
+        const playlistId = url.searchParams.get('list');
+        const isYouTube = url.hostname === 'www.youtube.com';
+        const isPlaylistPath = url.pathname === '/playlist';
+        const isPlaylistWatchPath = url.pathname === '/watch';
+
+        return isYouTube && Boolean(playlistId) && (isPlaylistPath || isPlaylistWatchPath);
+    } catch (error) {
+        return window.location.href.includes('/playlist?list=') || window.location.href.includes('/watch?list=');
+    }
+}
+
+function isPlaylistContentReady() {
+    return Boolean(
+        document.querySelector('ytd-browse[page-subtype="playlist"]') ||
+        document.querySelector('ytd-playlist-header-renderer') ||
+        document.querySelector('ytd-playlist-sidebar-primary-info-renderer') ||
+        document.querySelector('ytd-playlist-video-list-renderer')
+    );
+}
+
+function debugPlaylistState(label) {
+    const wrapper = document.querySelector('#playlist-search-wrapper');
+    const container = document.querySelector('#playlist-search-container');
+    const wrapperRect = wrapper ? wrapper.getBoundingClientRect() : null;
+    const containerRect = container ? container.getBoundingClientRect() : null;
+    const state = {
+        href: location.href,
+        playlistPage: isPlaylistPage(),
+        settled: isRouteSettled(),
+        ready: isPlaylistContentReady(),
+        hasWrapper: Boolean(wrapper),
+        hasContainer: Boolean(container),
+        wrapperConnected: Boolean(wrapper?.isConnected),
+        wrapperParent: wrapper?.parentElement?.tagName || null,
+        wrapperDisplay: wrapper ? getComputedStyle(wrapper).display : null,
+        wrapperVisibility: wrapper ? getComputedStyle(wrapper).visibility : null,
+        wrapperOpacity: wrapper ? getComputedStyle(wrapper).opacity : null,
+        wrapperRect: wrapperRect ? {
+            top: Math.round(wrapperRect.top),
+            left: Math.round(wrapperRect.left),
+            width: Math.round(wrapperRect.width),
+            height: Math.round(wrapperRect.height),
+        } : null,
+        wrapperOffsetParent: wrapper?.offsetParent?.tagName || null,
+        containerConnected: Boolean(container?.isConnected),
+        containerParent: container?.parentElement?.tagName || null,
+        containerDisplay: container ? getComputedStyle(container).display : null,
+        containerVisibility: container ? getComputedStyle(container).visibility : null,
+        containerOpacity: container ? getComputedStyle(container).opacity : null,
+        containerRect: containerRect ? {
+            top: Math.round(containerRect.top),
+            left: Math.round(containerRect.left),
+            width: Math.round(containerRect.width),
+            height: Math.round(containerRect.height),
+        } : null,
+        containerOffsetParent: container?.offsetParent?.tagName || null,
+        scrollY: window.scrollY,
+        scrollX: window.scrollX,
+        viewportHeight: window.innerHeight,
+        viewportWidth: window.innerWidth,
+        bodyChildCount: document.body ? document.body.children.length : null,
+    };
+    console.log(`[YPS] ${label}`, state);
+    console.log(
+        `[YPS] ${label} summary ` +
+        `wrapper=${state.hasWrapper ? `${state.wrapperParent} ${state.wrapperRect ? `${state.wrapperRect.top},${state.wrapperRect.left} ${state.wrapperRect.width}x${state.wrapperRect.height}` : 'no-rect'}` : 'none'} ` +
+        `container=${state.hasContainer ? `${state.containerParent} ${state.containerRect ? `${state.containerRect.top},${state.containerRect.left} ${state.containerRect.width}x${state.containerRect.height}` : 'no-rect'}` : 'none'} ` +
+        `display=${state.wrapperDisplay || 'n/a'}/${state.containerDisplay || 'n/a'} ` +
+        `vis=${state.wrapperVisibility || 'n/a'}/${state.containerVisibility || 'n/a'} ` +
+        `opacity=${state.wrapperOpacity || 'n/a'}/${state.containerOpacity || 'n/a'} ` +
+        `offsetParent=${state.wrapperOffsetParent || 'n/a'}/${state.containerOffsetParent || 'n/a'} ` +
+        `scroll=${state.scrollX},${state.scrollY} viewport=${state.viewportWidth}x${state.viewportHeight}`
+    );
+    return state;
 }
 
 function getVideoItems() {
     // Support both old and new YouTube layouts
+    // Filter out YouTube's offscreen cached containers that have no real content
     const allItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
     return Array.from(allItems).filter(el => {
         return el.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle');
@@ -110,30 +306,12 @@ function getVideoItems() {
 }
 
 function getTitleText(video) {
-    // Try new layout first
-    const newLayoutTitle = video.querySelector('.ytLockupMetadataViewModelTitle');
-    if (newLayoutTitle) {
-        return (newLayoutTitle?.textContent || '').toLowerCase();
-    }
-    
-    // Fall back to old layout
-    const titleEl = video.querySelector('#video-title')
-        || video.querySelector('a#video-title')
-        || video.querySelector('yt-formatted-string#video-title');
+    const titleEl = video.querySelector('.ytLockupMetadataViewModelTitle');
     return (titleEl?.textContent || '').toLowerCase();
 }
 
 function getChannelNameText(video) {
-    // Try new layout first
-    const newLayoutChannel = video.querySelector('.ytAttributedStringLink[href^="/@"]');
-    if (newLayoutChannel) {
-        return (newLayoutChannel?.textContent || '').trim();
-    }
-    
-    // Fall back to old layout
-    const channelEl = video.querySelector('ytd-channel-name#channel-name a')
-        || video.querySelector('#channel-name a')
-        || video.querySelector('a[href^="/@"]');
+    const channelEl = video.querySelector('.ytAttributedStringLink[href^="/@"]');
     return (channelEl?.textContent || '').trim();
 }
 
@@ -143,63 +321,35 @@ function computeVideoMeta(video) {
     const titleLower = getTitleText(video);
     const channelLower = getChannelNameText(video).toLowerCase();
     
-    // Views count - try new layout first
+    // Views count
     let viewsCount = 0;
-    const newLayoutViews = video.querySelector('.ytContentMetadataViewModelMetadataText[role="text"]');
-    if (newLayoutViews && /views?/i.test(newLayoutViews.textContent)) {
-        viewsCount = parseViewCount(newLayoutViews.textContent);
-    } else {
-        // Fall back to old layout
-        const spans = video.querySelectorAll('ytd-video-meta-block #metadata-line span, #video-info span');
-        const viewsSpan = Array.from(spans).find(s => /views?/i.test(s.textContent));
-        viewsCount = viewsSpan ? parseViewCount(viewsSpan.textContent) : 0;
+    const viewsEl = video.querySelector('.ytContentMetadataViewModelMetadataText[role="text"]');
+    if (viewsEl && /views?/i.test(viewsEl.textContent)) {
+        viewsCount = parseViewCount(viewsEl.textContent);
     }
     
-    // Year/date extraction - try new layout first
+    // Year/date extraction
     let yearStr = '';
-    const newLayoutDate = Array.from(video.querySelectorAll('.ytContentMetadataViewModelMetadataText')).find(el => 
+    const dateEl = Array.from(video.querySelectorAll('.ytContentMetadataViewModelMetadataText')).find(el =>
         /(\d{4})|(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i.test(el.textContent)
     );
-    if (newLayoutDate) {
-        const m = newLayoutDate.textContent.trim().match(/(\d{4})|(\d+)\s+years?\s+ago/i);
+    if (dateEl) {
+        const m = dateEl.textContent.trim().match(/(\d{4})|(\d+)\s+years?\s+ago/i);
         if (m) {
             const currentYear = new Date().getFullYear();
             const y = m[1] ? parseInt(m[1]) : currentYear - parseInt(m[2]);
             yearStr = String(y);
         }
-    } else {
-        // Fall back to old layout
-        const dateSpan = Array.from(video.querySelectorAll('ytd-video-meta-block #metadata-line span, #video-info span')).find(s => 
-            /(\d{4})|(\d+)\s+years?\s+ago/i.test(s.textContent)
-        );
-        if (dateSpan) {
-            const m = dateSpan.textContent.trim().match(/(\d{4})|(\d+)\s+years?\s+ago/i);
-            if (m) {
-                const currentYear = new Date().getFullYear();
-                const y = m[1] ? parseInt(m[1]) : currentYear - parseInt(m[2]);
-                yearStr = String(y);
-            }
-        }
     }
     
-    // Duration extraction - try new layout first
+    // Duration extraction
     let durationSec = 0;
-    const newLayoutDuration = video.querySelector('.ytThumbnailBadgeViewModelHost .ytBadgeShapeText');
-    if (newLayoutDuration) {
-        const durationText = newLayoutDuration.textContent.trim();
+    const durationEl = video.querySelector('.ytThumbnailBadgeViewModelHost .ytBadgeShapeText');
+    if (durationEl) {
+        const durationText = durationEl.textContent.trim();
         const match = durationText.match(/\d{1,2}:\d{2}(?::\d{2})?/);
         if (match) {
             durationSec = parseDuration(match[0]);
-        }
-    } else {
-        // Fall back to old layout
-        const overlay = video.querySelector('ytd-thumbnail-overlay-time-status-renderer');
-        if (overlay) {
-            const raw = (overlay.textContent || '').trim();
-            const match = raw.match(/\d{1,2}:\d{2}(?::\d{2})?/);
-            if (match) {
-                durationSec = parseDuration(match[0]);
-            }
         }
     }
     
@@ -223,6 +373,7 @@ function getVideoMeta(video) {
     videoMetaCache.set(video, updated);
     return updated;
 }
+
 // Function to create search interface element
 function createSearchElement() {
     const searchContainer = document.createElement('div');
@@ -267,8 +418,8 @@ function createSearchElement() {
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
         </div>
         <div class="search-options">
-            <label><input type="checkbox" id="search-title" checked> Search in titles</label>
-            <label><input type="checkbox" id="search-channel" checked> Search in channel names</label>
+            <label><input type="checkbox" id="search-title" checked> Search by title</label>
+            <label><input type="checkbox" id="search-channel" checked> Search by channel</label>
         </div>
         <div id="search-results-count"></div>
         
@@ -331,16 +482,7 @@ function updatePlayFilteredUrl() {
 
 // Helper function to get video ID from a playlist item
 function getVideoId(videoElement) {
-    // Try new layout first
-    const newLayoutLink = videoElement.querySelector('a[href*="watch"]');
-    if (newLayoutLink) {
-        const href = newLayoutLink.href || '';
-        const match = href.match(/[?&]v=([^&]+)/);
-        return match ? match[1] : null;
-    }
-    
-    // Fall back to old layout
-    const linkEl = videoElement.querySelector('a[href*="watch"], a#thumbnail');
+    const linkEl = videoElement.querySelector('a[href*="watch"]');
     const href = linkEl?.href || '';
     const match = href.match(/[?&]v=([^&]+)/);
     return match ? match[1] : null;
@@ -766,7 +908,7 @@ function showGroupFiltersModal() {
         // Apply current theme to modal when showing it
         const currentTheme = detectYouTubeTheme();
         modal.setAttribute('data-theme', currentTheme);
-        console.log('Applied theme to modal on show:', currentTheme); // Debug log
+        console.log('Applied theme to modal on show:', currentTheme);
         
         // Ensure the first tab is visible and active by default
         const firstTab = document.querySelector('.tab-button');
@@ -878,7 +1020,7 @@ function videoMatchesSearch(video, searchTerm) {
 }
 
 // Function to handle the search
-function handleSearch() {
+async function handleSearch() {
     const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
     const videoItems = Array.from(getVideoItems());
     const playFilteredButton = document.querySelector('#play-filtered-button');
@@ -892,6 +1034,8 @@ function handleSearch() {
     const isFiltering = searchTerm || selectedChannel || selectedYear || selectedViews || selectedDuration || hasActiveFilters();
 
     // Mark the document as actively searching for CSS-based hiding
+    // Using document.body ensures all video items (including lazy-loaded ones) are covered
+    console.log('[YPS-DIAG] handleSearch', { isFiltering, videoCount: videoItems.length, stack: new Error().stack.split('\n').slice(1, 4).join(' | ') });
     if (isFiltering) {
         document.body.setAttribute('data-searching', 'true');
     } else {
@@ -1205,15 +1349,23 @@ function addScrollListener() {
 
 // Function to initialize the extension
 function init() {
+    console.log('[YPS] init', {
+        href: location.href,
+        playlistPage: isPlaylistPage(),
+        settled: isRouteSettled(),
+        ready: isPlaylistContentReady(),
+        hasContainer: Boolean(document.querySelector('#playlist-search-container')),
+    });
+
     if (!isPlaylistPage()) return;
-    
+
     // Remove any existing search interfaces
-    const existingSearches = document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container');
+    const existingSearches = document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal');
     existingSearches.forEach(element => element.remove());
-    
+
     // Create new interface
     createSearchInterface();
-    
+
     // Add mutation observer for dynamically loaded videos using modern selectors
     const videoItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
     if (videoItems.length > 0) {
@@ -1231,91 +1383,272 @@ function init() {
             const observer = new MutationObserver((mutations) => {
                 const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
                 if (!searchTerm) return;
+                const newVideos = [];
                 mutations.forEach(mutation => {
                     if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                         mutation.addedNodes.forEach(node => {
                             if (node.nodeType !== 1) return;
                             if (node.matches && node.matches('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer')) {
-                                node.style.setProperty('display', 'none', 'important');
-                                try {
-                                    getVideoMeta(node);
-                                    if (videoMatchesSearch(node, searchTerm)) {
-                                        node.setAttribute('data-match', 'true');
-                                        node.style.removeProperty('display');
-                                    } else {
-                                        node.setAttribute('data-match', 'false');
-                                    }
-                                } catch (error) {
-                                    console.error('Error processing new video:', error);
-                                }
+                                newVideos.push(node);
                             }
                         });
                     }
                 });
+                if (newVideos.length) {
+                    newVideos.forEach(item => {
+                        try {
+                            getVideoMeta(item);
+                            const isMatch = videoMatchesSearch(item, searchTerm);
+                            if (!isMatch) {
+                                item.style.display = 'none';
+                            }
+                        } catch (error) {
+                            console.error('Error processing new video:', error);
+                        }
+                    });
+                    handleSearch();
+                }
             });
             observer.observe(videosContainer, { childList: true, subtree: true });
+            activeObservers.push(observer);
         }
     }
 }
 
 // Function to check if the search interface needs to be initialized
 function checkAndInitialize() {
-    // If we're not on a playlist page, don't do anything
+    debugPlaylistState('checkAndInitialize');
+    console.log('[YPS] checkAndInitialize', {
+        href: location.href,
+        playlistPage: isPlaylistPage(),
+        settled: isRouteSettled(),
+        ready: isPlaylistContentReady(),
+        hasContainer: Boolean(document.querySelector('#playlist-search-container')),
+    });
+
     if (!isPlaylistPage()) return;
 
-    // Check if the search interface exists and is properly placed
     const searchContainer = document.querySelector('#playlist-search-container');
-    
-    // If we have a search interface, verify it's still in a valid location
+
     if (searchContainer) {
         const wrapper = document.querySelector('#playlist-search-wrapper');
         if (wrapper && wrapper.parentElement) {
             const videosNearby = wrapper.parentElement.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
             if (videosNearby.length > 0) {
-                return; // Container is valid and near videos
+                console.log('[YPS] checkAndInitialize skip: existing container valid');
+                return;
             }
         }
     }
 
-    // Re-initialize if container is missing or orphaned
+    console.log('[YPS] checkAndInitialize call init');
     init();
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme detection
-    initThemeDetection();
-    
-    // Initial check
-    checkAndInitialize();
-
-    // Set up a mutation observer for the entire document to catch YouTube's SPA navigation
-    const documentObserver = new MutationObserver(() => {
-        checkAndInitialize();
-    });
-
-    documentObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-});
-
-// Also try to initialize immediately in case DOMContentLoaded has already fired
-checkAndInitialize();
-
-// Handle YouTube's navigation events
-window.addEventListener('yt-navigate-start', checkAndInitialize);
-window.addEventListener('yt-navigate-finish', checkAndInitialize);
-
-// Re-initialize when navigation occurs (for single-page-application behavior)
+let activeObservers = [];
+let lastRouteChangeAt = 0;
+let mountTimer = null;
+let cleanupTimer = null;
 let lastUrl = location.href;
-new MutationObserver(() => {
+let historyPatched = false;
+function markRouteChange() {
+    lastRouteChangeAt = Date.now();
+}
+
+function isRouteSettled() {
+    return lastRouteChangeAt === 0 || Date.now() - lastRouteChangeAt >= 800;
+}
+
+function resetPlaylistUi() {
+    console.log('[YPS-DIAG] resetPlaylistUi called', { observersDisconnected: activeObservers.length, stack: new Error().stack.split('\n').slice(1, 5).join(' | ') });
+    activeObservers.forEach(obs => { try { obs.disconnect(); } catch(e) {} });
+    activeObservers = [];
+    document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal').forEach(el => el.remove());
+    document.body.removeAttribute('data-searching');
+}
+
+function clearMountTimer() {
+    clearTimeout(mountTimer);
+    mountTimer = null;
+}
+
+function scheduleRouteCleanup() {
+    clearTimeout(cleanupTimer);
+    cleanupTimer = setTimeout(() => {
+        if (!isPlaylistPage()) {
+            resetPlaylistUi();
+        }
+    }, 100);
+}
+
+function schedulePlaylistMount(delay = 800) {
+    clearMountTimer();
+    mountTimer = setTimeout(tryMountPlaylistUi, delay);
+}
+
+function scheduleImmediatePlaylistCheck() {
+    clearMountTimer();
+    mountTimer = setTimeout(checkAndInitialize, 0);
+}
+
+function schedulePlaylistFallback() {
+    setTimeout(() => {
+        if (!document.querySelector('#playlist-search-container') && isPlaylistPage()) {
+            init();
+        }
+    }, 2000);
+}
+
+function tryMountPlaylistUi() {
+    debugPlaylistState('tryMountPlaylistUi');
+    console.log('[YPS] tryMountPlaylistUi', {
+        href: location.href,
+        playlistPage: isPlaylistPage(),
+        settled: isRouteSettled(),
+        ready: isPlaylistContentReady(),
+        hasContainer: Boolean(document.querySelector('#playlist-search-container')),
+    });
+
+    if (!isPlaylistPage()) {
+        resetPlaylistUi();
+        return;
+    }
+
+    checkAndInitialize();
+}
+
+function onRouteStart() {
+    console.log('[YPS] onRouteStart', { href: location.href, playlistPage: isPlaylistPage(), settled: isRouteSettled() });
+    markRouteChange();
+    // Only clean up when LEAVING a playlist page.
+    // When entering a playlist, NEVER! kill the pending mount timer... EVER!
+    if (!isPlaylistPage()) {
+        clearMountTimer();
+        resetPlaylistUi();
+    }
+    scheduleRouteCleanup();
+}
+
+function onRouteSettled() {
+    console.log('[YPS] onRouteSettled', { href: location.href, playlistPage: isPlaylistPage(), settled: isRouteSettled() });
+    if (isPlaylistPage()) {
+        schedulePlaylistMount(800);
+    }
+}
+
+function watchLocationChange() {
     const url = location.href;
     if (url !== lastUrl) {
         lastUrl = url;
-        checkAndInitialize();
+        onRouteStart();
+        onRouteSettled();
     }
-}).observe(document, { subtree: true, childList: true });
+}
+
+function patchHistoryMethods() {
+    if (historyPatched) return;
+    historyPatched = true;
+
+    const originalPushState = history.pushState.bind(history);
+    const originalReplaceState = history.replaceState.bind(history);
+
+    history.pushState = function (...args) {
+        const result = originalPushState(...args);
+        console.log('[YPS] history.pushState', { href: location.href, url: args[2] || null });
+        watchLocationChange();
+        return result;
+    };
+
+    history.replaceState = function (...args) {
+        const result = originalReplaceState(...args);
+        console.log('[YPS] history.replaceState', { href: location.href, args: args[2] || null });
+        watchLocationChange();
+        return result;
+    };
+
+    window.addEventListener('popstate', () => {
+        console.log('[YPS] popstate', { href: location.href });
+        watchLocationChange();
+    });
+}
+
+// Initialize only after YouTube settles on playlist route.
+initThemeDetection();
+patchHistoryMethods();
+if (isPlaylistPage()) {
+    schedulePlaylistMount(1200);
+}
+
+// Also try on load as fallback
+window.addEventListener('load', () => {
+    initThemeDetection();
+    patchHistoryMethods();
+    if (isPlaylistPage()) {
+        schedulePlaylistMount(800);
+    }
+});
+
+// Handle YouTube's navigation events
+window.addEventListener('yt-navigate-start', onRouteStart);
+window.addEventListener('yt-navigate-finish', onRouteSettled);
+window.addEventListener('yt-page-data-updated', onRouteSettled);
+window.addEventListener('yt-navigate-cache', onRouteSettled);
+window.addEventListener('yt-navigate-fail', onRouteStart);
+window.addEventListener('hashchange', watchLocationChange);
+
+// Watch for YouTube replacing the content area during SPA navigation.
+// When the content is swapped, the wrapper is destroyed — detect this
+// and re-mount on the new content. (this was a pain to figure out)
+(function watchForContentReplacement() {
+    const contentArea = document.querySelector('#page-manager') || document.querySelector('ytd-app');
+    if (!contentArea) {
+        setTimeout(watchForContentReplacement, 1000);
+        return;
+    }
+    let debounceTimer = null;
+    const observer = new MutationObserver(() => {
+        if (!isPlaylistPage()) return;
+        // Debounce: wait for YouTube to finish rendering
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            if (!document.querySelector('#playlist-search-wrapper') && isPlaylistPage()) {
+                console.log('[YPS] content replaced, re-mounting', { href: location.href });
+                schedulePlaylistMount(500);
+            }
+        }, 500);
+    });
+    observer.observe(contentArea, { childList: true, subtree: true });
+})();
+window.addEventListener('DOMContentLoaded', () => {
+    if (isPlaylistPage()) {
+        console.log('[YPS] DOMContentLoaded playlist', { href: location.href });
+        schedulePlaylistMount(800);
+    }
+});
+setTimeout(() => {
+    if (isPlaylistPage()) {
+        console.log('[YPS] delayed mount 700', { href: location.href });
+        schedulePlaylistMount(800);
+    }
+}, 700);
+setTimeout(() => {
+    if (isPlaylistPage()) {
+        console.log('[YPS] delayed mount 2000', { href: location.href });
+        schedulePlaylistMount(800);
+    }
+}, 2000);
+setTimeout(() => {
+    if (isPlaylistPage()) {
+        console.log('[YPS] delayed mount 4000', { href: location.href });
+        schedulePlaylistMount(800);
+    }
+}, 4000);
+
+// Guard direct init attempt after startup.
+if (isPlaylistPage()) {
+    console.log('[YPS] startup mount', { href: location.href });
+    schedulePlaylistMount(800);
+}
 
 // Function to get total playlist count
 function getPlaylistTotalCount() {
@@ -1331,159 +1664,260 @@ function getPlaylistTotalCount() {
 
 // Function to create and insert the search interface
 function createSearchInterface() {
-    // Check if search container already exists anywhere in the document
+    console.log('[YPS] createSearchInterface start', {
+        href: location.href,
+        playlistPage: isPlaylistPage(),
+        settled: isRouteSettled(),
+        ready: isPlaylistContentReady(),
+    });
+
     if (document.querySelector('#playlist-search-container')) {
+        console.log('[YPS] createSearchInterface bail: container exists', { href: location.href });
         return;
     }
 
-    // Wait for the playlist content to be loaded
     const checkForPlaylistContent = setInterval(() => {
-        // First, check if we have any video items at all
-        const videoItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
-        
-        if (videoItems.length === 0) {
-            return;
-        }
-        
-        // Find the first video that has actual content (title element)
-        const firstRealVideo = Array.from(videoItems).find(v => {
-            return v.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle');
+        console.log('[YPS] createSearchInterface poll', {
+            href: location.href,
+            playlistPage: isPlaylistPage(),
+            settled: isRouteSettled(),
+            ready: isPlaylistContentReady(),
+            videoCount: document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer').length,
+            hasWrapper: Boolean(document.querySelector('#playlist-search-wrapper')),
+            hasContainer: Boolean(document.querySelector('#playlist-search-container')),
         });
-        
-        if (!firstRealVideo) {
+
+        if (!isPlaylistPage() || !isRouteSettled()) return;
+
+        const videoItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+        if (videoItems.length === 0) {
+            console.log('[YPS] createSearchInterface bail: no video items', { href: location.href });
             return;
         }
-        
-        // Find the container that holds the videos
-        let videosContainer = firstRealVideo.parentElement;
-        let playlistContent = videosContainer;
-        
-        // Try to find a good insertion point - look for a container with an ID
-        let currentElement = videosContainer;
-        for (let i = 0; i < 5; i++) {
-            if (currentElement.id || currentElement.tagName.startsWith('YTD-')) {
-                playlistContent = currentElement;
+
+        const firstRealVideo = Array.from(videoItems).find(video =>
+            video.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle')
+        );
+        if (!firstRealVideo) {
+            console.log('[YPS] createSearchInterface bail: no real video', { href: location.href });
+            return;
+        }
+
+        if (document.querySelector('#playlist-search-container')) {
+            console.log('[YPS] createSearchInterface bail: container already mounted', { href: location.href });
+            return;
+        }
+
+        const rectFor = (el) => {
+            const rect = el?.getBoundingClientRect?.();
+            return rect ? {
+                top: Math.round(rect.top),
+                left: Math.round(rect.left),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+            } : null;
+        };
+
+        const videoParent = firstRealVideo.parentElement;
+        if (!videoParent) return;
+
+        let insertTarget = null;
+        let candidate = firstRealVideo;
+        for (let i = 0; i < 20 && candidate; i++) {
+            const rect = candidate.getBoundingClientRect();
+            if (rect.width >= 400 && rect.height > 0) {
+                insertTarget = candidate;
                 break;
             }
-            if (currentElement.parentElement) {
-                currentElement = currentElement.parentElement;
-            } else {
-                break;
+            candidate = candidate.parentElement;
+        }
+        if (!insertTarget) insertTarget = videoParent;
+
+        if (insertTarget?.tagName === 'YTD-PAGE-MANAGER') {
+            const visibleBrowse = document.querySelector('ytd-browse[page-subtype="playlist"]');
+            if (visibleBrowse) {
+                // Find the first real video INSIDE the visible browse (not the old hidden one)
+                const allVideoItems = visibleBrowse.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+                const visibleFirstVideo = Array.from(allVideoItems).find(v =>
+                    v.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle')
+                );
+                if (visibleFirstVideo) {
+                    insertTarget = visibleFirstVideo;
+                } else {
+                    insertTarget = visibleBrowse;
+                }
             }
         }
-        
-        // Only proceed if we have both elements and no existing search container
-        if (playlistContent && videosContainer && !document.querySelector('#playlist-search-container')) {
-            clearInterval(checkForPlaylistContent);
-            
-            // Remove any existing wrapper
-            const existingWrapper = document.querySelector('#playlist-search-wrapper');
-            if (existingWrapper) {
-                existingWrapper.remove();
-            }
-            
-            const searchContainer = createSearchElement();
-            const wrapper = document.createElement('div');
-            wrapper.id = 'playlist-search-wrapper';
-            wrapper.appendChild(searchContainer);
-            
-            // Strategy 1: If videosContainer is a DIRECT child of playlistContent, insert before it
-            if (videosContainer.parentNode === playlistContent) {
-                playlistContent.insertBefore(wrapper, videosContainer);
-            } 
-            // Strategy 2: If they're the same element, prepend to it
-            else if (videosContainer === playlistContent) {
-                if (playlistContent.firstChild) {
-                    playlistContent.insertBefore(wrapper, playlistContent.firstChild);
-                } else {
-                    playlistContent.appendChild(wrapper);
-                }
-            }
-            // Strategy 3: Find a suitable parent
-            else {
-                // Find the lowest common ancestor
-                let parent = videosContainer.parentElement;
-                let insertionPoint = videosContainer;
-                while (parent && parent !== playlistContent && parent.parentElement) {
-                    if (parent.parentElement === playlistContent || parent.id || parent.tagName.startsWith('YTD-')) {
-                        break;
-                    }
-                    insertionPoint = parent;
-                    parent = parent.parentElement;
-                }
-                
-                if (parent && insertionPoint.parentElement) {
-                    insertionPoint.parentElement.insertBefore(wrapper, insertionPoint);
-                } else {
-                    if (playlistContent.firstChild) {
-                        playlistContent.insertBefore(wrapper, playlistContent.firstChild);
-                    } else {
-                        playlistContent.appendChild(wrapper);
-                    }
-                }
-            }
 
-            addSearchEventListeners();
-            
-            // Observe this container for lazily loaded videos
-            const newVideoObserver = new MutationObserver((mutations) => {
-                const searchTerm = document.querySelector('#playlist-search-input')?.value.toLowerCase() || '';
-                const hasFilters = searchTerm || document.querySelector('#channel-filter')?.value
-                    || document.querySelector('#year-filter')?.value
-                    || document.querySelector('#views-filter')?.value
-                    || document.querySelector('#duration-filter')?.value
-                    || hasActiveFilters();
+        clearInterval(checkForPlaylistContent);
+        document.querySelector('#playlist-search-wrapper')?.remove();
+        document.querySelector('#group-filters-modal')?.remove();
 
-                if (!hasFilters) return;
+        const wrapper = document.createElement('div');
+        wrapper.id = 'playlist-search-wrapper';
+        wrapper.setAttribute('data-yps-mounted', 'true');
+        wrapper.appendChild(createSearchElement());
+        const container = wrapper.querySelector('#playlist-search-container');
+        if (container) container.setAttribute('data-yps-mounted', 'true');
 
-                const videoSelector = 'yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer';
-                const processed = new Set();
+        wrapper.style.cssText = 'background: transparent !important; position: relative !important; display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 50px !important; margin-top: 12px !important; width: 100% !important; max-width: none !important; clear: both !important; box-sizing: border-box !important; overflow: visible !important;';
+        if (container) {
+            container.style.cssText = 'position: relative !important; display: flex !important; visibility: visible !important; opacity: 1 !important; min-height: 50px !important; width: 100% !important; max-width: none !important; box-sizing: border-box !important;';
+        }
 
-                function processVideo(videoEl) {
-                    if (processed.has(videoEl)) return;
-                    processed.add(videoEl);
-                    videoEl.style.setProperty('display', 'none', 'important');
-                    if (videoMatchesSearch(videoEl, searchTerm)) {
-                        videoEl.setAttribute('data-match', 'true');
-                        videoEl.style.removeProperty('display');
-                    } else {
-                        videoEl.setAttribute('data-match', 'false');
-                    }
-                }
+        const videoSelector = 'yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer';
+        if (insertTarget?.matches?.(videoSelector)) {
+            insertTarget.insertAdjacentElement('beforebegin', wrapper);
+        } else {
+            insertTarget.prepend(wrapper);
+        }
+        if (!wrapper.isConnected) {
+            // Fallback: prepend into the video parent container
+            videoParent.insertBefore(wrapper, videoParent.firstChild);
+        }
 
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType !== 1) return;
-                            // Check the node itself
-                            if (node.matches(videoSelector)) {
-                                processVideo(node);
-                            }
-                            // Also check descendants (YouTube may add containers with videos inside)
-                            node.querySelectorAll(videoSelector).forEach(processVideo);
-                        });
-                    }
-                });
+        // Move modal to body so it escapes YouTube's stacking context
+        const modalInContainer = document.querySelector('#group-filters-modal');
+        if (modalInContainer) {
+            document.body.appendChild(modalInContainer);
+        }
 
-                // Ensure data-searching persists in case YouTube replaced the container
-                if (processed.size > 0 && !document.body.hasAttribute('data-searching')) {
-                    document.body.setAttribute('data-searching', 'true');
-                }
+        console.log('[YPS] createSearchInterface insert ok', { href: location.href, target: insertTarget?.tagName || null });
+        debugPlaylistState('createSearchInterface after insert');
+        addSearchEventListeners();
+        console.log('[YPS] createSearchInterface listeners added', { href: location.href });
+        debugPlaylistState('createSearchInterface after listeners');
+        const wrapperAfterInsert = document.querySelector('#playlist-search-wrapper');
+        const containerAfterInsert = document.querySelector('#playlist-search-container');
+        console.log('[YPS] createSearchInterface inserted nodes', {
+            wrapperHtml: wrapperAfterInsert ? wrapperAfterInsert.outerHTML.slice(0, 200) : null,
+            containerHtml: containerAfterInsert ? containerAfterInsert.outerHTML.slice(0, 200) : null,
+        });
+        setTimeout(() => {
+            const currentWrapper = document.querySelector('#playlist-search-wrapper');
+            const currentContainer = document.querySelector('#playlist-search-container');
+            console.log('[YPS] createSearchInterface 100ms snapshot', {
+                wrapperExists: Boolean(currentWrapper),
+                containerExists: Boolean(currentContainer),
+                wrapperHtml: currentWrapper ? currentWrapper.outerHTML.slice(0, 200) : null,
+                containerHtml: currentContainer ? currentContainer.outerHTML.slice(0, 200) : null,
             });
+        }, 100);
+        setTimeout(() => {
+            const currentWrapper = document.querySelector('#playlist-search-wrapper');
+            const currentContainer = document.querySelector('#playlist-search-container');
+            console.log('[YPS] createSearchInterface 500ms snapshot', {
+                wrapperExists: Boolean(currentWrapper),
+                containerExists: Boolean(currentContainer),
+                wrapperHtml: currentWrapper ? currentWrapper.outerHTML.slice(0, 200) : null,
+                containerHtml: currentContainer ? currentContainer.outerHTML.slice(0, 200) : null,
+            });
+        }, 500);
+        setTimeout(() => {
+            const currentWrapper = document.querySelector('#playlist-search-wrapper');
+            const currentContainer = document.querySelector('#playlist-search-container');
+            console.log('[YPS] createSearchInterface 1000ms snapshot', {
+                wrapperExists: Boolean(currentWrapper),
+                containerExists: Boolean(currentContainer),
+                wrapperHtml: currentWrapper ? currentWrapper.outerHTML.slice(0, 200) : null,
+                containerHtml: currentContainer ? currentContainer.outerHTML.slice(0, 200) : null,
+            });
+        }, 1000);
 
-            // Observe document.body so we catch videos even if YouTube replaces the playlist container
-            newVideoObserver.observe(document.body, { childList: true, subtree: true });
-            
-            // Update filters after a short delay to ensure videos are loaded
-            setTimeout(() => {
-                updateChannelFilter();
-                updateYearFilter();
-            }, 1000);
+        const newVideoObserver = new MutationObserver((mutations) => {
+            // Only re-run search when the user is actively filtering
+            // otherwise touching data-match on every mutation disrupts
+            // YouTube's own rendering / virtual-scroll pipeline.
+            if (!hasActiveFilters()) return;
+            const hasVideoAdds = mutations.some(m =>
+                m.type === 'childList' && Array.from(m.addedNodes || []).some(n => {
+                    if (n.nodeType !== 1) return false;
+                    if (n.matches?.('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer')) return true;
+                    return n.querySelector?.('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+                })
+            );
+            if (!hasVideoAdds) return;
+            console.log('[YPS] createSearchInterface mutation (video added, filters active)', { href: location.href });
+            handleSearch();
+        });
+
+        newVideoObserver.observe(document.body, { childList: true, subtree: true });
+        activeObservers.push(newVideoObserver);
+        console.log('[YPS] createSearchInterface observer attached', { href: location.href });
+        debugPlaylistState('createSearchInterface observer attached');
+
+        setTimeout(() => debugPlaylistState('createSearchInterface 1s later'), 1000);
+        setTimeout(() => debugPlaylistState('createSearchInterface 3s later'), 3000);
+        setTimeout(() => {
+            if (!document.querySelector('#playlist-search-container')) {
+                console.log('[YPS] createSearchInterface container missing after 5s', { href: location.href });
+            }
+        }, 5000);
+        setTimeout(() => {
+            if (document.querySelector('#playlist-search-wrapper') && !document.querySelector('#playlist-search-container')) {
+                console.log('[YPS] wrapper exists but container missing', { href: location.href });
+            }
+        }, 5000);
+        setTimeout(() => {
+            if (!document.querySelector('#playlist-search-wrapper')) {
+                console.log('[YPS] wrapper removed after mount', { href: location.href });
+            }
+        }, 5000);
+        setTimeout(() => {
+            const wrapper = document.querySelector('#playlist-search-wrapper');
+            if (wrapper) {
+                console.log('[YPS] wrapper parent check', {
+                    href: location.href,
+                    parent: wrapper.parentElement?.tagName || null,
+                    connected: wrapper.isConnected,
+                    display: getComputedStyle(wrapper).display,
+                    visibility: getComputedStyle(wrapper).visibility,
+                    opacity: getComputedStyle(wrapper).opacity,
+                });
+            }
+        }, 5000);
+        setTimeout(() => {
+            const container = document.querySelector('#playlist-search-container');
+            if (container) {
+                console.log('[YPS] container style check', {
+                    href: location.href,
+                    parent: container.parentElement?.tagName || null,
+                    connected: container.isConnected,
+                    display: getComputedStyle(container).display,
+                    visibility: getComputedStyle(container).visibility,
+                    opacity: getComputedStyle(container).opacity,
+                });
+            }
+        }, 5000);
+        setTimeout(() => debugPlaylistState('createSearchInterface 5s later'), 5000);
+        setTimeout(() => {
+            if (!document.body.contains(document.querySelector('#playlist-search-wrapper'))) {
+                console.log('[YPS] wrapper no longer contained in body', { href: location.href });
+            }
+        }, 5000);
+        setTimeout(() => {
+            if (document.querySelector('#playlist-search-wrapper')) {
+                console.log('[YPS] wrapper still present after 5s', { href: location.href });
+            }
+        }, 5000);
+
+        setTimeout(() => {
+            updateChannelFilter();
+            updateYearFilter();
+        }, 1000);
+    }, 500);
+
+    setTimeout(() => {
+        const targetStillVisible = Boolean(
+            document.querySelector('ytd-playlist-video-list-renderer')?.getBoundingClientRect?.().height > 0 ||
+            document.querySelector('ytd-playlist-header-renderer')?.getBoundingClientRect?.().height > 0 ||
+            document.querySelector('ytd-playlist-sidebar-primary-info-renderer')?.getBoundingClientRect?.().height > 0
+        );
+        if (!targetStillVisible && isPlaylistPage()) {
+            console.log('[YPS] createSearchInterface timeout: target never became visible', { href: location.href });
         }
-    }, 500); // Check every 500ms
-
-    // Clear interval after 30 seconds to prevent infinite checking
-    setTimeout(() => clearInterval(checkForPlaylistContent), 30000);
+        clearInterval(checkForPlaylistContent);
+    }, 30000);
 }
 
 // Function to clear all search filters

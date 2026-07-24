@@ -19,7 +19,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 }
 
 #playlist-search-container {
-    padding: 12px;
+    padding: 12px 16px 12px 12px;
     background: var(--yt-spec-brand-background-primary);
     width: 100%;
     max-width: none;
@@ -29,8 +29,10 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     border: 1px solid var(--yt-spec-text-secondary);
     border-radius: 8px;
     box-sizing: border-box;
-    margin: 0 24px;
-    width: calc(100% - 48px);
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
 }
 
 /* Theme-specific styling for main container */
@@ -50,6 +52,7 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     width: 100%;
     flex-wrap: wrap;
     align-items: center;
+    min-width: 0;
 }
 
 .search-options {
@@ -58,6 +61,8 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     margin: 8px 0;
     font-size: 14px;
     color: var(--yt-spec-text-primary);
+    flex-wrap: wrap;
+    white-space: nowrap;
 }
 
 .search-options label {
@@ -839,6 +844,38 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 .cancel-selection-button:hover {
     background: #e5e5e5;
+}
+
+/* Light theme overrides for main UI elements */
+#playlist-search-container[data-theme="light"] #playlist-search-input,
+#playlist-search-container[data-theme="light"] #channel-filter,
+#playlist-search-container[data-theme="light"] #year-filter,
+#playlist-search-container[data-theme="light"] #views-filter,
+#playlist-search-container[data-theme="light"] #duration-filter {
+    background: white !important;
+    color: #0f0f0f !important;
+    border-color: #cccccc !important;
+}
+
+#playlist-search-container[data-theme="light"] .search-options {
+    color: #0f0f0f !important;
+}
+
+#playlist-search-container[data-theme="light"] #search-results-count {
+    color: #606060 !important;
+}
+
+#playlist-search-container[data-theme="light"] #clear-search-button,
+#playlist-search-container[data-theme="light"] #auto-scroll-toggle,
+#playlist-search-container[data-theme="light"] #group-filters-button {
+    background: #f1f1f1 !important;
+    color: #0f0f0f !important;
+}
+
+#playlist-search-container[data-theme="light"] #clear-search-button:hover,
+#playlist-search-container[data-theme="light"] #auto-scroll-toggle:hover,
+#playlist-search-container[data-theme="light"] #group-filters-button:hover {
+    background: #e5e5e5 !important;
 }
 
 /* Dark theme overrides for main UI elements */
