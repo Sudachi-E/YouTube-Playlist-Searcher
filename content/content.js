@@ -223,11 +223,10 @@ function isPlaylistPage() {
         const playlistId = url.searchParams.get('list');
         const isYouTube = url.hostname === 'www.youtube.com';
         const isPlaylistPath = url.pathname === '/playlist';
-        const isPlaylistWatchPath = url.pathname === '/watch';
 
-        return isYouTube && Boolean(playlistId) && (isPlaylistPath || isPlaylistWatchPath);
+        return isYouTube && Boolean(playlistId) && isPlaylistPath;
     } catch (error) {
-        return window.location.href.includes('/playlist?list=') || window.location.href.includes('/watch?list=');
+        return window.location.href.includes('/playlist?list=');
     }
 }
 
