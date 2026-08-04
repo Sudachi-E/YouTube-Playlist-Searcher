@@ -1291,6 +1291,9 @@ async function autoScrollAndSearch() {
 
         // Keep scrolling until we've loaded all videos or found enough matches
         while ((!totalCount || currentCount < totalCount) && noNewVideosCount < 3) {
+            // Stop if we've navigated away from the playlist page
+            if (!isPlaylistPage()) break;
+
             // Scroll to bottom
             window.scrollTo(0, document.documentElement.scrollHeight);
             
