@@ -1458,10 +1458,20 @@ function isRouteSettled() {
     return lastRouteChangeAt === 0 || Date.now() - lastRouteChangeAt >= 800;
 }
 
+// Function to deactivate all filter groups (used when leaving the playlist page)
+function deactivateFilterGroups() {
+    const groups = loadFilterGroups();
+    let changed = false;
+    groups.keywords.forEach(g => { if (g.active) { g.active = false; changed = true; } });
+    groups.channels.forEach(g => { if (g.active) { g.active = false; changed = true; } });
+    if (changed) saveFilterGroups(groups);
+}
+
 function resetPlaylistUi() {
     console.log('[YPS-DIAG] resetPlaylistUi called', { observersDisconnected: activeObservers.length, stack: new Error().stack.split('\n').slice(1, 5).join(' | ') });
     activeObservers.forEach(obs => { try { obs.disconnect(); } catch(e) {} });
     activeObservers = [];
+    deactivateFilterGroups();
     document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal').forEach(el => el.remove());
     document.body.removeAttribute('data-searching');
 }
