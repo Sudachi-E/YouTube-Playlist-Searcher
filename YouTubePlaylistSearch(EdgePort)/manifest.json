@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Playlist Search",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "Goodbye to manually searching through multiple videos in a large playlist",
   "host_permissions": ["https://www.youtube.com/*"],
   "content_scripts": [

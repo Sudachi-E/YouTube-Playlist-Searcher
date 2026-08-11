@@ -514,7 +514,8 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     background: var(--yt-spec-brand-button-background-hover, #0553c2);
 }
 
-#group-filters-button {
+#group-filters-button,
+#support-button {
     background: var(--yt-spec-badge-chip-background);
     color: var(--yt-spec-text-primary);
     padding: 8px 16px;
@@ -527,7 +528,8 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     transition: all 0.2s;
 }
 
-#group-filters-button:hover {
+#group-filters-button:hover,
+#support-button:hover {
     background: #999999;
 }
 
@@ -867,14 +869,16 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 #playlist-search-container[data-theme="light"] #clear-search-button,
 #playlist-search-container[data-theme="light"] #auto-scroll-toggle,
-#playlist-search-container[data-theme="light"] #group-filters-button {
+#playlist-search-container[data-theme="light"] #group-filters-button,
+#playlist-search-container[data-theme="light"] #support-button {
     background: #f1f1f1 !important;
     color: #0f0f0f !important;
 }
 
 #playlist-search-container[data-theme="light"] #clear-search-button:hover,
 #playlist-search-container[data-theme="light"] #auto-scroll-toggle:hover,
-#playlist-search-container[data-theme="light"] #group-filters-button:hover {
+#playlist-search-container[data-theme="light"] #group-filters-button:hover,
+#playlist-search-container[data-theme="light"] #support-button:hover {
     background: #e5e5e5 !important;
 }
 
@@ -910,7 +914,8 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 #playlist-search-container[data-theme="dark"] #clear-search-button,
 #playlist-search-container[data-theme="dark"] #auto-scroll-toggle,
-#playlist-search-container[data-theme="dark"] #group-filters-button {
+#playlist-search-container[data-theme="dark"] #group-filters-button,
+#playlist-search-container[data-theme="dark"] #support-button {
     background: #3c3c3c !important;
     color: white !important;
 }
@@ -952,4 +957,183 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     .channel-selection-content {
         background-color: #212121;
     }
+}
+
+/* Support Modal Styles */
+#support-modal .modal-content {
+    margin: 5% auto;
+}
+
+.support-body {
+    margin-top: 16px;
+}
+
+.support-section {
+    margin-bottom: 24px;
+}
+
+.support-section:last-child {
+    margin-bottom: 0;
+}
+
+.support-section h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: var(--yt-spec-text-primary);
+}
+
+.support-section p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--yt-spec-text-secondary);
+}
+
+#support-issue-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#support-issue-form label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--yt-spec-text-primary);
+}
+
+#support-issue-form input[type="text"],
+#support-issue-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid var(--yt-spec-text-secondary);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--yt-spec-brand-background-primary);
+    color: var(--yt-spec-text-primary);
+    font-family: inherit;
+}
+
+#support-issue-form input[type="text"]:focus,
+#support-issue-form textarea:focus {
+    outline: none;
+    border-color: var(--yt-spec-brand-button-background);
+}
+
+#support-submit-button {
+    margin-top: 8px;
+    align-self: flex-start;
+    padding: 8px 16px;
+    background: var(--yt-spec-brand-button-background, #065fd4);
+    color: var(--yt-spec-static-brand-white, white);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+#support-submit-button:hover {
+    background: var(--yt-spec-brand-button-background-hover, #0553c2);
+}
+
+#support-donate-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #ff5e5b;
+    color: white;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+#support-donate-link:hover {
+    background: #e04e4b;
+}
+
+.support-divider {
+    text-align: center;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--yt-spec-text-secondary);
+}
+
+#support-github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: #333333;
+    color: white;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+#support-github-link:hover {
+    background: #555555;
+}
+
+.support-github-icon {
+    flex-shrink: 0;
+}
+
+/* Light theme support modal overrides */
+#support-modal[data-theme="light"] .support-section h3 {
+    color: #0f0f0f !important;
+}
+
+#support-modal[data-theme="light"] .support-version {
+    color: #666666 !important;
+}
+
+#support-modal[data-theme="light"] .support-section p {
+    color: #606060 !important;
+}
+
+#support-modal[data-theme="light"] .support-divider {
+    color: #606060 !important;
+}
+
+#support-modal[data-theme="light"] #support-issue-form label {
+    color: #0f0f0f !important;
+}
+
+#support-modal[data-theme="light"] #support-issue-form input[type="text"],
+#support-modal[data-theme="light"] #support-issue-form textarea {
+    background: white !important;
+    color: #0f0f0f !important;
+    border-color: #cccccc !important;
+}
+
+/* Dark theme support modal overrides */
+#support-modal[data-theme="dark"] .support-section h3 {
+    color: white !important;
+}
+
+#support-modal[data-theme="dark"] .support-divider {
+    color: white !important;
+}
+
+#support-modal[data-theme="dark"] .support-version {
+    color: #aaaaaa !important;
+}
+
+#support-modal[data-theme="dark"] .support-section p {
+    color: #aaaaaa !important;
+}
+
+#support-modal[data-theme="dark"] #support-issue-form label {
+    color: white !important;
+}
+
+#support-modal[data-theme="dark"] #support-issue-form input[type="text"],
+#support-modal[data-theme="dark"] #support-issue-form textarea {
+    background: #212121 !important;
+    color: white !important;
+    border-color: #3c3c3c !important;
 }

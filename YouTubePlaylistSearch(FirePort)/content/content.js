@@ -4,6 +4,8 @@ function isMainYouTubeHost() {
 
 if (isMainYouTubeHost()) {
 
+const SUPPORT_EMAIL = 'contact.sudotronics@gmail.com';
+
 (function setupDiagnostics() {
     function waitForBody(fn) {
         if (document.body) return fn();
@@ -164,6 +166,7 @@ function applyThemeToExtension(theme) {
     const container = document.querySelector('#playlist-search-container');
     const modal = document.querySelector('#group-filters-modal');
     const channelDialog = document.querySelector('.channel-selection-dialog');
+    const supportModal = document.querySelector('#support-modal');
     
     console.log('Applying theme:', theme);
     
@@ -180,6 +183,10 @@ function applyThemeToExtension(theme) {
     if (channelDialog) {
         channelDialog.setAttribute('data-theme', theme);
         console.log('Applied theme to channel dialog:', channelDialog);
+    }
+    if (supportModal) {
+        supportModal.setAttribute('data-theme', theme);
+        console.log('Applied theme to support modal:', supportModal);
     }
 }
 
@@ -414,6 +421,7 @@ function createSearchElement() {
             <button id="group-filters-button" class="filter-button">Group Filters</button>
             <button id="auto-scroll-toggle" class="${isAutoScrollEnabled ? 'enabled' : ''}">Auto-Scroll: ${isAutoScrollEnabled ? 'On' : 'Off'}</button>
             <button id="clear-search-button">Clear</button>
+            <button id="support-button" class="filter-button">Support</button>
             <a id="play-filtered-button" href="#" style="display: none;">Play Filtered</a>
         </div>
         <div class="search-options">
@@ -444,6 +452,42 @@ function createSearchElement() {
                         <!-- Channel groups will be populated here -->
                     </div>
                     <button class="add-group-button">Add Channel Group</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Modal -->
+        <div id="support-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header support-modal-header">
+                    <h2>Support</h2>
+                    <div class="support-modal-meta">
+                        <span class="support-version">v1.1.0</span>
+                        <button id="support-close-button" class="close-button">&times;</button>
+                    </div>
+                </div>
+                <div class="support-body">
+                    <div class="support-section">
+                        <h3>Report an Issue</h3>
+                        <p>Fill in the form below - your email app will open with your message ready to send.</p>
+                        <form id="support-issue-form">
+                            <label for="support-subject">Subject</label>
+                            <input type="text" id="support-subject" required placeholder="Short summary of the problem">
+                            <label for="support-message">Message</label>
+                            <textarea id="support-message" rows="5" required placeholder="Describe the issue or feature request... send a image/video of the issue through your email app"></textarea>
+                            <button type="submit" id="support-submit-button">Send via Email</button>
+                        </form>
+                        <div class="support-divider">or</div>
+                        <a id="support-github-link" href="https://github.com/Sudachi-E/YouTube-Playlist-Searcher/issues" target="_blank" rel="noopener noreferrer">
+                            <svg class="support-github-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                            Report on GitHub
+                        </a>
+                    </div>
+                    <div class="support-section">
+                        <h3>Support Development</h3>
+                        <p>Enjoying the extension? Consider buying me a coffee!</p>
+                        <a id="support-donate-link" href="https://ko-fi.com/SudoTronics" target="_blank" rel="noopener noreferrer">&#9749; Buy me a coffee</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -746,9 +790,13 @@ function createChannelSelectionDialog(selectedChannels = []) {
             resolve(selectedChannels);
         });
         
-        // Close if clicking outside the content area
+        // Close if clicking outside the content area (only if press began on backdrop)
+        let backdropPress = false;
+        dialog.addEventListener('mousedown', (e) => {
+            backdropPress = (e.target === dialog);
+        });
         dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
+            if (e.target === dialog && backdropPress) {
                 closeDialog();
             }
         });
@@ -926,6 +974,68 @@ function hideGroupFiltersModal() {
     const modal = document.querySelector('#group-filters-modal');
     if (modal) {
         modal.style.display = 'none';
+    }
+}
+
+// Function to show the support modal
+function showSupportModal() {
+    const modal = document.querySelector('#support-modal');
+    if (modal) {
+        modal.style.display = 'block';
+        const currentTheme = detectYouTubeTheme();
+        modal.setAttribute('data-theme', currentTheme);
+    }
+}
+
+// Function to hide the support modal
+function hideSupportModal() {
+    const modal = document.querySelector('#support-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Function to handle support form submission
+function submitSupportIssue(e) {
+    e.preventDefault();
+    const subject = document.querySelector('#support-subject').value.trim();
+    const message = document.querySelector('#support-message').value.trim();
+    if (!subject || !message) return;
+    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`[YouTube Playlist Search] ${subject}`)}&body=${encodeURIComponent(message)}`;
+    window.location.href = mailto;
+}
+
+// Function to add event listeners for the support modal
+function addSupportEventListeners() {
+    const supportButton = document.querySelector('#support-button');
+    const closeButton = document.querySelector('#support-close-button');
+    const modal = document.querySelector('#support-modal');
+    const form = document.querySelector('#support-issue-form');
+
+    if (supportButton) {
+        supportButton.addEventListener('click', showSupportModal);
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', hideSupportModal);
+    }
+
+    if (modal) {
+        // Only close if the press began on the backdrop — otherwise a drag-selection
+        // that leaves the modal and releases on the backdrop would close it.
+        let backdropPress = false;
+        modal.addEventListener('mousedown', (e) => {
+            backdropPress = (e.target === modal);
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal && backdropPress) {
+                hideSupportModal();
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', submitSupportIssue);
     }
 }
 
@@ -1263,6 +1373,9 @@ function addSearchEventListeners() {
 
     // Add group filter event listeners
     addGroupFilterEventListeners();
+
+    // Add support modal event listeners
+    addSupportEventListeners();
 }
 
 // Function to auto-scroll and search
@@ -1362,7 +1475,7 @@ function init() {
     if (!isPlaylistPage()) return;
 
     // Remove any existing search interfaces
-    const existingSearches = document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal');
+    const existingSearches = document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal, #support-modal');
     existingSearches.forEach(element => element.remove());
 
     // Create new interface
@@ -1475,7 +1588,7 @@ function resetPlaylistUi() {
     activeObservers.forEach(obs => { try { obs.disconnect(); } catch(e) {} });
     activeObservers = [];
     deactivateFilterGroups();
-    document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal').forEach(el => el.remove());
+    document.querySelectorAll('#playlist-search-wrapper, #playlist-search-container, #group-filters-modal, #support-modal').forEach(el => el.remove());
     document.body.removeAttribute('data-searching');
 }
 
@@ -1764,6 +1877,7 @@ function createSearchInterface() {
         clearInterval(checkForPlaylistContent);
         document.querySelector('#playlist-search-wrapper')?.remove();
         document.querySelector('#group-filters-modal')?.remove();
+        document.querySelector('#support-modal')?.remove();
 
         const wrapper = document.createElement('div');
         wrapper.id = 'playlist-search-wrapper';
@@ -1788,10 +1902,14 @@ function createSearchInterface() {
             videoParent.insertBefore(wrapper, videoParent.firstChild);
         }
 
-        // Move modal to body so it escapes YouTube's stacking context
+        // Move modals to body so they escape YouTube's stacking context
         const modalInContainer = document.querySelector('#group-filters-modal');
         if (modalInContainer) {
             document.body.appendChild(modalInContainer);
+        }
+        const supportModalInContainer = document.querySelector('#support-modal');
+        if (supportModalInContainer) {
+            document.body.appendChild(supportModalInContainer);
         }
 
         console.log('[YPS] createSearchInterface insert ok', { href: location.href, target: insertTarget?.tagName || null });
@@ -2006,8 +2124,13 @@ function addGroupFilterEventListeners() {
     }
     
     if (modal) {
+        // Only close if the press began on the backdrop (see support modal)
+        let backdropPress = false;
+        modal.addEventListener('mousedown', (e) => {
+            backdropPress = (e.target === modal);
+        });
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            if (e.target === modal && backdropPress) {
                 hideGroupFiltersModal();
             }
         });
