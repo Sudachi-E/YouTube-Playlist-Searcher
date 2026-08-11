@@ -312,12 +312,12 @@ function getVideoItems() {
 }
 
 function getTitleText(video) {
-    const titleEl = video.querySelector('.ytLockupMetadataViewModelTitle');
-    return (titleEl?.textContent || '').toLowerCase();
+    const titleEl = video.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle');
+    return (titleEl?.textContent || '').trim().toLowerCase();
 }
 
 function getChannelNameText(video) {
-    const channelEl = video.querySelector('.ytAttributedStringLink[href^="/@"]');
+    const channelEl = video.querySelector('.ytAttributedStringLink[href^="/@"], #channel-name a, #channel-name yt-formatted-string, ytd-channel-name a');
     return (channelEl?.textContent || '').trim();
 }
 
@@ -329,15 +329,18 @@ function computeVideoMeta(video) {
     
     // Views count
     let viewsCount = 0;
-    const viewsEl = video.querySelector('.ytContentMetadataViewModelMetadataText[role="text"]');
-    if (viewsEl && /views?/i.test(viewsEl.textContent)) {
+    const metadataTexts = Array.from(video.querySelectorAll(
+        '.ytContentMetadataViewModelMetadataText[role="text"], .ytContentMetadataViewModelMetadataText, #metadata-line .inline-metadata-item, #metadata-line span, .metadata-line .inline-metadata-item, .ytLockupMetadataViewModelMetadataText'
+    ));
+    const viewsEl = metadataTexts.find(el => /views?/i.test(el.textContent || ''));
+    if (viewsEl) {
         viewsCount = parseViewCount(viewsEl.textContent);
     }
-    
+
     // Year/date extraction
     let yearStr = '';
-    const dateEl = Array.from(video.querySelectorAll('.ytContentMetadataViewModelMetadataText')).find(el =>
-        /(\d{4})|(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i.test(el.textContent)
+    const dateEl = metadataTexts.find(el =>
+        /(\d{4})|(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i.test(el.textContent || '')
     );
     if (dateEl) {
         const m = dateEl.textContent.trim().match(/(\d{4})|(\d+)\s+years?\s+ago/i);
@@ -347,10 +350,12 @@ function computeVideoMeta(video) {
             yearStr = String(y);
         }
     }
-    
+
     // Duration extraction
     let durationSec = 0;
-    const durationEl = video.querySelector('.ytThumbnailBadgeViewModelHost .ytBadgeShapeText');
+    const durationEl = Array.from(video.querySelectorAll(
+        '.ytThumbnailBadgeViewModelHost .ytBadgeShapeText, ytd-thumbnail-overlay-time-status-renderer .ytBadgeShapeText, ytd-thumbnail-overlay-time-status-renderer #text, #overlays ytd-thumbnail-overlay-time-status-renderer span'
+    )).find(el => /\d{1,2}:\d{2}(?::\d{2})?/.test((el.textContent || '').trim()));
     if (durationEl) {
         const durationText = durationEl.textContent.trim();
         const match = durationText.match(/\d{1,2}:\d{2}(?::\d{2})?/);
