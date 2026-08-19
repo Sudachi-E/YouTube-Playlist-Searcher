@@ -303,11 +303,20 @@ function debugPlaylistState(label) {
 }
 
 function getVideoItems() {
-    // Support both old and new YouTube layouts
     // Filter out YouTube's offscreen cached containers that have no real content
+    // Also filter out recommended videos injected by YouTube into user playlists
     const allItems = document.querySelectorAll('yt-lockup-view-model, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer');
+    const seen = new Set();
     return Array.from(allItems).filter(el => {
-        return el.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle');
+        if (el.getAttribute('style-type') === 'playlist-video-renderer-style-recommended-video') return false;
+        if (!el.querySelector('#video-title, a#video-title, yt-formatted-string#video-title, .ytLockupMetadataViewModelTitle')) return false;
+        // Deduplicate by video ID to avoid counting lazy-loaded duplicates
+        const videoId = getVideoId(el);
+        if (videoId) {
+            if (seen.has(videoId)) return false;
+            seen.add(videoId);
+        }
+        return true;
     });
 }
 
