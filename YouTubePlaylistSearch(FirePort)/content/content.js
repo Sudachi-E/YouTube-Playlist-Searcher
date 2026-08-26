@@ -476,7 +476,7 @@ function createSearchElement() {
                 <div class="modal-header support-modal-header">
                     <h2>Support</h2>
                     <div class="support-modal-meta">
-                        <span class="support-version">v1.1.0</span>
+                        <span class="support-version">v1.0.9</span>
                         <button id="support-close-button" class="close-button">&times;</button>
                     </div>
                 </div>
@@ -1418,7 +1418,7 @@ async function autoScrollAndSearch() {
 
         // Keep scrolling until we've loaded all videos or found enough matches
         while ((!totalCount || currentCount < totalCount) && noNewVideosCount < 3) {
-            // Stop if navigating away from the playlist page
+            // Stop if we've navigated away from the playlist page
             if (!isPlaylistPage()) break;
 
             // Scroll to bottom
@@ -1714,6 +1714,19 @@ function patchHistoryMethods() {
 // Initialize only after YouTube settles on playlist route.
 initThemeDetection();
 patchHistoryMethods();
+
+['pointerdown', 'mousedown', 'touchstart', 'dragstart', 'selectstart'].forEach(evtName => {
+    window.addEventListener(evtName, (e) => {
+        if (!isPlaylistPage()) return;
+        // composedPath covers shadow DOM; fall back to target containment
+        const startedInside = e.composedPath?.().some(node =>
+            node instanceof Element && node.closest?.('#playlist-search-wrapper')
+        ) || (e.target instanceof Element && e.target.closest('#playlist-search-wrapper'));
+        if (startedInside) {
+            e.stopImmediatePropagation();
+        }
+    }, true);
+});
 if (isPlaylistPage()) {
     schedulePlaylistMount(1200);
 }
@@ -1896,6 +1909,7 @@ function createSearchInterface() {
         const wrapper = document.createElement('div');
         wrapper.id = 'playlist-search-wrapper';
         wrapper.setAttribute('data-yps-mounted', 'true');
+        wrapper.setAttribute('draggable', 'false');
         wrapper.appendChild(createSearchElement());
         const container = wrapper.querySelector('#playlist-search-container');
         if (container) container.setAttribute('data-yps-mounted', 'true');

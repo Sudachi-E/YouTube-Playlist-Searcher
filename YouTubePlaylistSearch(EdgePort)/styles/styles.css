@@ -11,6 +11,13 @@
     box-sizing: border-box;
     display: block;
     clear: both;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#playlist-search-wrapper input,
+#playlist-search-wrapper textarea {
+    user-select: text;
 }
 
 /* Hide unavailable videos alert */
@@ -364,6 +371,25 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     margin: 0;
     color: var(--yt-spec-text-primary, inherit);
     font-size: 20px;
+}
+
+.support-modal-header {
+    align-items: flex-start;
+}
+
+.support-modal-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.support-version {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--yt-spec-text-secondary, #666666);
+    white-space: nowrap;
+    margin-top: 4px;
 }
 
 .close-button {
@@ -848,40 +874,6 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
     background: #e5e5e5;
 }
 
-/* Light theme overrides for main UI elements */
-#playlist-search-container[data-theme="light"] #playlist-search-input,
-#playlist-search-container[data-theme="light"] #channel-filter,
-#playlist-search-container[data-theme="light"] #year-filter,
-#playlist-search-container[data-theme="light"] #views-filter,
-#playlist-search-container[data-theme="light"] #duration-filter {
-    background: white !important;
-    color: #0f0f0f !important;
-    border-color: #cccccc !important;
-}
-
-#playlist-search-container[data-theme="light"] .search-options {
-    color: #0f0f0f !important;
-}
-
-#playlist-search-container[data-theme="light"] #search-results-count {
-    color: #606060 !important;
-}
-
-#playlist-search-container[data-theme="light"] #clear-search-button,
-#playlist-search-container[data-theme="light"] #auto-scroll-toggle,
-#playlist-search-container[data-theme="light"] #group-filters-button,
-#playlist-search-container[data-theme="light"] #support-button {
-    background: #f1f1f1 !important;
-    color: #0f0f0f !important;
-}
-
-#playlist-search-container[data-theme="light"] #clear-search-button:hover,
-#playlist-search-container[data-theme="light"] #auto-scroll-toggle:hover,
-#playlist-search-container[data-theme="light"] #group-filters-button:hover,
-#playlist-search-container[data-theme="light"] #support-button:hover {
-    background: #e5e5e5 !important;
-}
-
 /* Dark theme overrides for main UI elements */
 #playlist-search-container[data-theme="dark"] #playlist-search-input,
 #playlist-search-container[data-theme="dark"] #channel-filter,
@@ -926,6 +918,40 @@ ytd-browse[page-subtype="playlist"] #alerts.ytd-browse {
 
 #playlist-search-container[data-theme="dark"] #play-filtered-button:hover {
     color: white !important;
+}
+
+/* Light theme overrides for main UI elements */
+#playlist-search-container[data-theme="light"] #playlist-search-input,
+#playlist-search-container[data-theme="light"] #channel-filter,
+#playlist-search-container[data-theme="light"] #year-filter,
+#playlist-search-container[data-theme="light"] #views-filter,
+#playlist-search-container[data-theme="light"] #duration-filter {
+    background: white !important;
+    color: #0f0f0f !important;
+    border-color: #cccccc !important;
+}
+
+#playlist-search-container[data-theme="light"] .search-options {
+    color: #0f0f0f !important;
+}
+
+#playlist-search-container[data-theme="light"] #search-results-count {
+    color: #606060 !important;
+}
+
+#playlist-search-container[data-theme="light"] #clear-search-button,
+#playlist-search-container[data-theme="light"] #auto-scroll-toggle,
+#playlist-search-container[data-theme="light"] #group-filters-button,
+#playlist-search-container[data-theme="light"] #support-button {
+    background: #f1f1f1 !important;
+    color: #0f0f0f !important;
+}
+
+#playlist-search-container[data-theme="light"] #clear-search-button:hover,
+#playlist-search-container[data-theme="light"] #auto-scroll-toggle:hover,
+#playlist-search-container[data-theme="light"] #group-filters-button:hover,
+#playlist-search-container[data-theme="light"] #support-button:hover {
+    background: #e5e5e5 !important;
 }
 
 /* Dark mode fallback for all text elements */

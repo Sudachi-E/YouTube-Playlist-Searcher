@@ -11,6 +11,13 @@
     box-sizing: border-box;
     display: block;
     clear: both;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#playlist-search-wrapper input,
+#playlist-search-wrapper textarea {
+    user-select: text;
 }
 
 /* Hide unavailable videos alert */

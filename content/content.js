@@ -1714,6 +1714,19 @@ function patchHistoryMethods() {
 // Initialize only after YouTube settles on playlist route.
 initThemeDetection();
 patchHistoryMethods();
+
+['pointerdown', 'mousedown', 'touchstart', 'dragstart', 'selectstart'].forEach(evtName => {
+    window.addEventListener(evtName, (e) => {
+        if (!isPlaylistPage()) return;
+        // composedPath covers shadow DOM; fall back to target containment
+        const startedInside = e.composedPath?.().some(node =>
+            node instanceof Element && node.closest?.('#playlist-search-wrapper')
+        ) || (e.target instanceof Element && e.target.closest('#playlist-search-wrapper'));
+        if (startedInside) {
+            e.stopImmediatePropagation();
+        }
+    }, true);
+});
 if (isPlaylistPage()) {
     schedulePlaylistMount(1200);
 }
@@ -1896,6 +1909,7 @@ function createSearchInterface() {
         const wrapper = document.createElement('div');
         wrapper.id = 'playlist-search-wrapper';
         wrapper.setAttribute('data-yps-mounted', 'true');
+        wrapper.setAttribute('draggable', 'false');
         wrapper.appendChild(createSearchElement());
         const container = wrapper.querySelector('#playlist-search-container');
         if (container) container.setAttribute('data-yps-mounted', 'true');
